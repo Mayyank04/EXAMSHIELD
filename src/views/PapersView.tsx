@@ -589,7 +589,10 @@ export const PapersView: React.FC<PapersViewProps> = ({
       <QrCodeModal
         isOpen={qrModalData.isOpen}
         onClose={() => setQrModalData({ isOpen: false, paper: null })}
-        paper={qrModalData.paper}
+        title={qrModalData.paper ? qrModalData.paper.paperCode : ''}
+        payload={qrModalData.paper ? qrModalData.paper.qrPayload : ''}
+        type="PAPER"
+        entityId={qrModalData.paper ? qrModalData.paper.id : ''}
       />
     </div>
   );

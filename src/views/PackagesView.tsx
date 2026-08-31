@@ -355,6 +355,16 @@ export const PackagesView: React.FC<PackagesViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* QR Code Modal */}
+      <QrCodeModal
+        isOpen={qrModalData.isOpen}
+        onClose={() => setQrModalData({ isOpen: false, pkg: null })}
+        title={qrModalData.pkg ? qrModalData.pkg.packageCode : ''}
+        payload={qrModalData.pkg ? qrModalData.pkg.qrPayload : ''}
+        type="PACKAGE"
+        entityId={qrModalData.pkg ? qrModalData.pkg.id : ''}
+      />
     </div>
   );
 };

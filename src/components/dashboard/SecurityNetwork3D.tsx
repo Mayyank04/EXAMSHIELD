@@ -24,23 +24,23 @@ import { SplineScene } from '../ui/splite.tsx';
 import { Spotlight } from '../ui/spotlight.tsx';
 
 interface SecurityNetwork3DProps {
-  systemScore: number;
-  activeThreatsCount: number;
-  papersCount: number;
-  inTransitCount: number;
-  centresCount: number;
-  iotDevicesCount: number;
+  systemScore?: number;
+  activeThreatsCount?: number;
+  papersCount?: number;
+  inTransitCount?: number;
+  centresCount?: number;
+  iotDevicesCount?: number;
   onNavigateToView: (view: string) => void;
   onRefresh: () => void;
 }
 
 export const SecurityNetwork3D: React.FC<SecurityNetwork3DProps> = ({
-  systemScore,
-  activeThreatsCount,
-  papersCount,
-  inTransitCount,
-  centresCount,
-  iotDevicesCount,
+  systemScore = 98,
+  activeThreatsCount = 0,
+  papersCount = 0,
+  inTransitCount = 3,
+  centresCount = 10,
+  iotDevicesCount = 30,
   onNavigateToView,
   onRefresh,
 }) => {

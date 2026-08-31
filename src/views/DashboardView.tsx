@@ -52,25 +52,25 @@ import { SecurityNetwork3D } from '../components/dashboard/SecurityNetwork3D.tsx
 import { ThreatRadar } from '../components/dashboard/ThreatRadar.tsx';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card.tsx';
 import { LiquidButton, MetalButton } from '../components/ui/liquid-glass-button.tsx';
-import { Alert, ExamCentre, Incident, Package, Paper, SystemStats, User } from '../types/index.ts';
+import { Alert, DashboardMetrics, ExamCentre, Incident, Package, Paper, SystemStats, User } from '../types/index.ts';
 
 interface DashboardViewProps {
-  metrics?: SystemStats | null;
-  papers: Paper[];
-  packages: Package[];
-  alerts: Alert[];
+  metrics?: SystemStats | DashboardMetrics | null;
+  papers?: Paper[];
+  packages?: Package[];
+  alerts?: Alert[];
   incidents?: Incident[];
   centres?: ExamCentre[];
-  currentUser: User;
+  currentUser?: User;
   onNavigateToView: (view: string) => void;
   onRefresh: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   metrics,
-  papers,
-  packages,
-  alerts,
+  papers = [],
+  packages = [],
+  alerts = [],
   incidents = [],
   centres = [],
   currentUser,
@@ -85,9 +85,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     setTimeout(() => setIsRefreshing(false), 500);
   };
 
-  const activeAlerts = alerts.filter((a) => a.status === 'OPEN' || a.status === 'INVESTIGATING');
+  const safeAlerts = alerts || [];
+  const activeAlerts = safeAlerts.filter((a) => a.status === 'OPEN' || a.status === 'INVESTIGATING');
   const criticalAlertsCount = activeAlerts.filter((a) => a.severity === 'CRITICAL').length;
-  const inTransitCount = packages.filter((p) => p.status === 'IN_TRANSIT').length || 3;
+  const inTransitCount = (packages || []).filter((p) => p.status === 'IN_TRANSIT').length || 3;
   const securityScore = metrics?.systemSecurityScore ?? 98;
 
   // Trend Telemetry Data
@@ -106,9 +107,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <SecurityNetwork3D
         systemScore={securityScore}
         activeThreatsCount={activeAlerts.length}
-        papersCount={papers.length}
+        papersCount={(papers || []).length}
         inTransitCount={inTransitCount}
-        centresCount={centres.length}
+        centresCount={(centres || []).length}
         iotDevicesCount={30}
         onNavigateToView={onNavigateToView}
         onRefresh={handleRefresh}
@@ -118,9 +119,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       <SecurityMetrics
         activeThreatsCount={activeAlerts.length}
         criticalThreatsCount={criticalAlertsCount}
-        papersCount={papers.length}
-        packagesCount={packages.length}
-        centresCount={centres.length}
+        papersCount={(papers || []).length}
+        packagesCount={(packages || []).length}
+        centresCount={(centres || []).length}
         iotDevicesCount={30}
         systemScore={securityScore}
         onNavigateToView={onNavigateToView}
@@ -205,7 +206,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="space-y-2.5">
               <button
                 onClick={() => onNavigateToView('papers')}
-                className="w-full p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-cyan-500/40 transition flex items-center justify-between text-left group"
+                className="w-full p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-cyan-500/40 transition flex items-center justify-between text-left group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
@@ -221,7 +222,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
               <button
                 onClick={() => onNavigateToView('handover')}
-                className="w-full p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-teal-500/40 transition flex items-center justify-between text-left group"
+                className="w-full p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-teal-500/40 transition flex items-center justify-between text-left group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-teal-500/10 border border-teal-500/30 flex items-center justify-center text-teal-400">
@@ -237,7 +238,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
               <button
                 onClick={() => onNavigateToView('leak')}
-                className="w-full p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-purple-500/40 transition flex items-center justify-between text-left group"
+                className="w-full p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-purple-500/40 transition flex items-center justify-between text-left group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-purple-500/10 border border-purple-500/30 flex items-center justify-center text-purple-400">
@@ -253,7 +254,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
               <button
                 onClick={() => onNavigateToView('blockchain')}
-                className="w-full p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-blue-500/40 transition flex items-center justify-between text-left group"
+                className="w-full p-3 rounded-xl bg-slate-950/70 border border-slate-800 hover:border-blue-500/40 transition flex items-center justify-between text-left group cursor-pointer"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-center text-blue-400">
@@ -273,7 +274,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
       {/* 5. Live Incident Feed & Active Triage */}
       <IncidentFeed
-        alerts={alerts}
+        alerts={safeAlerts}
         onOpenInvestigation={(alert) => onNavigateToView('incidents')}
         onNavigateToIncidents={() => onNavigateToView('incidents')}
       />

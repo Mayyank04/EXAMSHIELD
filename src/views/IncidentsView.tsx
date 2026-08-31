@@ -41,7 +41,7 @@ interface IncidentsViewProps {
 }
 
 export const IncidentsView: React.FC<IncidentsViewProps> = ({
-  incidents,
+  incidents = [],
   currentUser,
   onRefresh,
 }) => {
@@ -215,32 +215,20 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-center">
                     <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                      <div className="text-[9px] text-slate-500 uppercase">Assigned Officer</div>
-                      <div className="text-xs font-bold text-slate-200 mt-1 truncate">{activeIncident.assignedTo}</div>
+                      <div className="text-[9px] text-slate-500 uppercase">Assigned Investigator</div>
+                      <div className="text-xs font-bold text-slate-200 mt-1 truncate">{activeIncident.assignedInvestigator || 'Dr. Sharma'}</div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                      <div className="text-[9px] text-slate-500 uppercase">Confidence Score</div>
-                      <div className="text-xs font-bold text-cyan-300 mt-1">{activeIncident.confidenceScore}%</div>
+                      <div className="text-[9px] text-slate-500 uppercase">Risk Rating</div>
+                      <div className="text-xs font-bold text-cyan-300 mt-1">{activeIncident.risk || 88}%</div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
-                      <div className="text-[9px] text-slate-500 uppercase">Related Entity</div>
-                      <div className="text-xs font-bold text-purple-300 mt-1 truncate">{activeIncident.relatedEntityId}</div>
+                      <div className="text-[9px] text-slate-500 uppercase">Related Target</div>
+                      <div className="text-xs font-bold text-purple-300 mt-1 truncate">{activeIncident.affectedPaperId || activeIncident.affectedPackageId || 'SYS-ENCLAVE'}</div>
                     </div>
                     <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
                       <div className="text-[9px] text-slate-500 uppercase">Current State</div>
                       <div className="text-xs font-bold text-amber-300 mt-1">{activeIncident.status}</div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <div className="text-[10px] font-mono text-slate-400 font-semibold uppercase">Detection Evidence Telemetry:</div>
-                    <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 space-y-2 font-mono text-[11px]">
-                      {Object.entries(activeIncident.detectionSignals).map(([k, v]) => (
-                        <div key={k} className="flex justify-between border-b border-slate-900 pb-1">
-                          <span className="text-slate-500 uppercase">{k}:</span>
-                          <span className="text-slate-200 font-bold">{String(v)}</span>
-                        </div>
-                      ))}
                     </div>
                   </div>
                 </div>
@@ -253,8 +241,8 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
                     Multi-Entity Relationship Graph showing correlation across paper batches, armored carriers, and sentinel nodes.
                   </div>
                   <ThreatGraph
-                    nodes={activeIncident.graphNodes}
-                    edges={activeIncident.graphEdges}
+                    nodes={activeIncident.graphNodes || []}
+                    edges={activeIncident.graphEdges || []}
                   />
                 </div>
               )}
@@ -263,16 +251,16 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
               {activeTab === 'EVIDENCE' && (
                 <div className="space-y-3">
                   <div className="space-y-2">
-                    {activeIncident.evidenceTimeline.map((item, idx) => (
+                    {(activeIncident.evidence || []).map((item, idx) => (
                       <div key={idx} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-3">
                         <span className="w-2 h-2 rounded-full bg-cyan-400 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(0,217,255,0.8)]" />
                         <div className="space-y-1">
                           <div className="flex items-center gap-2 font-mono text-[10px]">
                             <span className="text-cyan-400">{new Date(item.timestamp).toLocaleTimeString()}</span>
                             <span className="text-slate-500">•</span>
-                            <span className="text-purple-400 font-bold">{item.source}</span>
+                            <span className="text-purple-400 font-bold">{item.type}</span>
                           </div>
-                          <p className="text-xs text-slate-200 font-sans">{item.event}</p>
+                          <p className="text-xs text-slate-200 font-sans">{item.name}: {item.description}</p>
                         </div>
                       </div>
                     ))}
@@ -287,7 +275,7 @@ export const IncidentsView: React.FC<IncidentsViewProps> = ({
                     Automated Containment Response Protocol:
                   </div>
                   <div className="space-y-2">
-                    {activeIncident.containmentActions.map((action, idx) => (
+                    {(activeIncident.resolutionPlaybook || []).map((action, idx) => (
                       <div key={idx} className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400" />

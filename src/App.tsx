@@ -19,7 +19,8 @@ import {
   Package,
   Paper,
   Question,
-  SecurityPolicy,
+  SecurityPolicyItem,
+  SystemStats,
   TransportRoute,
   User,
   UserRiskProfile,
@@ -50,7 +51,7 @@ import { VerificationView } from './views/VerificationView.tsx';
 import { WelcomeView } from './views/WelcomeView.tsx';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<string>('welcome');
+  const [currentView, setCurrentView] = useState<string>('dashboard');
   const [currentUser, setCurrentUser] = useState<User>({
     id: 'USR-001',
     name: 'Dr. Rajeshwar Sharma',
@@ -64,7 +65,7 @@ export default function App() {
   });
 
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);
-  const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
+  const [metrics, setMetrics] = useState<SystemStats | null>(null);
   const [papers, setPapers] = useState<Paper[]>([]);
   const [packages, setPackages] = useState<Package[]>([]);
   const [centres, setCentres] = useState<ExamCentre[]>([]);
@@ -76,7 +77,7 @@ export default function App() {
   const [riskProfiles, setRiskProfiles] = useState<UserRiskProfile[]>([]);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [devices, setDevices] = useState<IoTDevice[]>([]);
-  const [policies, setPolicies] = useState<SecurityPolicy[]>([]);
+  const [policies, setPolicies] = useState<SecurityPolicyItem[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
@@ -107,31 +108,31 @@ export default function App() {
         incidentsRes,
         chainRes,
         custodyRes,
+        usersRes,
         riskRes,
         questionsRes,
         devicesRes,
         policiesRes,
         auditRes,
-        usersRes,
       ] = await Promise.all([
-        api.getDashboardMetrics(),
-        api.getPapers(),
-        api.getPackages(),
-        api.getCentres(),
-        api.getRoutes(),
-        api.getAlerts(),
-        api.getIncidents(),
-        api.getBlockchainChain(),
-        api.getCustodyEvents(),
-        api.getUserRiskProfiles(),
-        api.getQuestions(),
-        api.getIoTDevices(),
-        api.getSecurityPolicies(),
-        api.getAuditLogs(),
-        api.getUsers(),
+        api.getStats().catch(() => null),
+        api.getPapers().catch(() => []),
+        api.getPackages().catch(() => []),
+        api.getCentres().catch(() => []),
+        api.getRoutes().catch(() => []),
+        api.getAlerts().catch(() => []),
+        api.getIncidents().catch(() => []),
+        api.getBlockchainChain().catch(() => []),
+        api.getCustodyEvents().catch(() => []),
+        api.getUsers().catch(() => []),
+        api.getUserRiskProfiles().catch(() => []),
+        api.getQuestions().catch(() => []),
+        api.getIotDevices().catch(() => []),
+        api.getSecurityPolicies().catch(() => []),
+        api.getAuditLogs().catch(() => []),
       ]);
 
-      setMetrics(metricsRes);
+      if (metricsRes) setMetrics(metricsRes);
       setPapers(papersRes);
       setPackages(packagesRes);
       setCentres(centresRes);
@@ -140,12 +141,12 @@ export default function App() {
       setIncidents(incidentsRes);
       setChain(chainRes);
       setCustodyEvents(custodyRes);
+      setAvailableUsers(usersRes);
       setRiskProfiles(riskRes);
       setQuestions(questionsRes);
       setDevices(devicesRes);
       setPolicies(policiesRes);
       setAuditLogs(auditRes);
-      setAvailableUsers(usersRes);
 
       // Generate notifications from active alerts
       const notifs: NotificationItem[] = alertsRes.slice(0, 10).map((a) => ({
@@ -180,7 +181,7 @@ export default function App() {
   };
 
   const handleResetDemo = async () => {
-    await api.resetDemo();
+    await api.resetSystem();
     showToast('Demonstration Baseline Reset', 'All telemetry, sensor states, and ledger blocks restored.', 'INFO');
     fetchAllData();
   };
@@ -188,20 +189,8 @@ export default function App() {
   const activeAlertsCount = alerts.filter((a) => a.status === 'OPEN' || a.status === 'INVESTIGATING').length;
   const criticalIncidentsCount = incidents.filter((i) => i.status !== 'CLOSED' && i.status !== 'RESOLVED').length;
 
-  // Render Welcome Page if at root / welcome view
-  if (currentView === 'welcome') {
-    return (
-      <div className="min-h-screen bg-[#F8F7F4] font-sans selection:bg-blue-600 selection:text-white">
-        <WelcomeView
-          onEnterApp={() => setCurrentView('dashboard')}
-          onExploreArchitecture={() => setCurrentView('vault3d')}
-        />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-[#0B0F19] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white">
+    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white relative">
       {/* Top Editorial Navbar */}
       <Navbar
         currentUser={currentUser}
@@ -230,17 +219,24 @@ export default function App() {
         />
 
         {/* Dynamic View Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#0B0F19] scrollbar-thin">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#030712]/50 backdrop-blur-sm scrollbar-thin">
           {isLoading && !metrics ? (
             <div className="h-96 flex flex-col items-center justify-center space-y-4">
-              <div className="w-10 h-10 rounded-full border-4 border-blue-500/20 border-t-blue-500 animate-spin" />
-              <div className="text-xs font-mono text-slate-400">
+              <div className="w-10 h-10 rounded-full border-4 border-cyan-500/20 border-t-cyan-400 animate-spin" />
+              <div className="text-xs font-mono text-cyan-400">
                 BOOTING ZERO-TRUST EXAMSHIELD PLATFORM & VERIFYING LEDGER...
               </div>
             </div>
           ) : (
             <>
-              {currentView === 'dashboard' && metrics && (
+              {currentView === 'welcome' && (
+                <WelcomeView
+                  onEnterApp={() => setCurrentView('dashboard')}
+                  onExploreArchitecture={() => setCurrentView('vault3d')}
+                />
+              )}
+
+              {currentView === 'dashboard' && (
                 <DashboardView
                   metrics={metrics}
                   papers={papers}

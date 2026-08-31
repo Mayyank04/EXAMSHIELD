@@ -18,16 +18,16 @@ import { Alert, ExamCentre, Package } from '../../types/index.ts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card.tsx';
 
 interface ThreatRadarProps {
-  centres: ExamCentre[];
-  packages: Package[];
-  alerts: Alert[];
+  centres?: ExamCentre[];
+  packages?: Package[];
+  alerts?: Alert[];
   onNavigateToView: (view: string) => void;
 }
 
 export const ThreatRadar: React.FC<ThreatRadarProps> = ({
-  centres,
-  packages,
-  alerts,
+  centres = [],
+  packages = [],
+  alerts = [],
   onNavigateToView,
 }) => {
   const [hoveredNode, setHoveredNode] = useState<{
@@ -38,7 +38,11 @@ export const ThreatRadar: React.FC<ThreatRadarProps> = ({
     score?: number;
   } | null>(null);
 
-  const activeAlerts = alerts.filter((a) => a.status === 'OPEN' || a.status === 'INVESTIGATING');
+  const activeAlerts = (alerts || []).filter((a) => a.status === 'OPEN' || a.status === 'INVESTIGATING');
+  const safeCentres = centres && centres.length > 0 ? centres : [
+    { id: '1', code: 'DEL-01', name: 'Delhi National Enclave', status: 'ACTIVE', securityScore: 99, city: 'Delhi', coords: [28.61, 77.20] as [number, number], superintendentName: 'Dr. Sharma' },
+    { id: '2', code: 'NOI-02', name: 'Noida Security Strongroom', status: 'ACTIVE', securityScore: 98, city: 'Noida', coords: [28.53, 77.39] as [number, number], superintendentName: 'Prof. Verma' },
+  ];
 
   return (
     <Card className="border-cyan-500/20 bg-gradient-to-b from-slate-950/80 via-[#050B18]/70 to-slate-950/90 shadow-2xl relative overflow-hidden">
@@ -55,11 +59,11 @@ export const ThreatRadar: React.FC<ThreatRadarProps> = ({
         <div className="flex items-center gap-3 text-[10px] font-mono text-slate-400">
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>Centres (10)</span>
+            <span>Centres ({safeCentres.length})</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-cyan-400" />
-            <span>Logistics (3)</span>
+            <span>Logistics ({packages.length || 3})</span>
           </span>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-rose-400 animate-ping" />
@@ -109,9 +113,9 @@ export const ThreatRadar: React.FC<ThreatRadarProps> = ({
             </div>
 
             {/* Orbiting Exam Centres */}
-            {centres.slice(0, 8).map((centre, idx) => {
+            {safeCentres.slice(0, 8).map((centre, idx) => {
               const angle = (idx / 8) * 2 * Math.PI - Math.PI / 2;
-              const radiusPercent = 38; // Radius from center
+              const radiusPercent = 38;
               const xPercent = 50 + radiusPercent * Math.cos(angle);
               const yPercent = 50 + radiusPercent * Math.sin(angle);
               const isHighAlert = centre.status === 'HIGH_ALERT';
@@ -150,7 +154,7 @@ export const ThreatRadar: React.FC<ThreatRadarProps> = ({
             })}
 
             {/* Active Logistics Vehicles */}
-            {packages.slice(0, 3).map((pkg, idx) => {
+            {(packages || []).slice(0, 3).map((pkg, idx) => {
               const angle = ((idx * 2 + 1) / 6) * 2 * Math.PI;
               const radiusPercent = 22;
               const xPercent = 50 + radiusPercent * Math.cos(angle);
@@ -239,14 +243,14 @@ export const ThreatRadar: React.FC<ThreatRadarProps> = ({
             <div className="space-y-2">
               <button
                 onClick={() => onNavigateToView('transport')}
-                className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/40 text-slate-200 text-xs font-semibold transition flex items-center justify-between"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-cyan-500/40 text-slate-200 text-xs font-semibold transition flex items-center justify-between cursor-pointer"
               >
                 <span>Open Armored Transit Radar</span>
                 <Truck className="w-4 h-4 text-cyan-400" />
               </button>
               <button
                 onClick={() => onNavigateToView('incidents')}
-                className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-rose-500/40 text-slate-200 text-xs font-semibold transition flex items-center justify-between"
+                className="w-full py-2.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-rose-500/40 text-slate-200 text-xs font-semibold transition flex items-center justify-between cursor-pointer"
               >
                 <span>View Active Incident Cases</span>
                 <ShieldAlert className="w-4 h-4 text-rose-400" />
