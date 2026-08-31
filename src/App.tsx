@@ -51,7 +51,7 @@ import { VerificationView } from './views/VerificationView.tsx';
 import { WelcomeView } from './views/WelcomeView.tsx';
 
 export default function App() {
-  const [currentView, setCurrentView] = useState<string>('dashboard');
+  const [currentView, setCurrentView] = useState<string>('welcome');
   const [currentUser, setCurrentUser] = useState<User>({
     id: 'USR-001',
     name: 'Dr. Rajeshwar Sharma',
@@ -189,8 +189,18 @@ export default function App() {
   const activeAlertsCount = alerts.filter((a) => a.status === 'OPEN' || a.status === 'INVESTIGATING').length;
   const criticalIncidentsCount = incidents.filter((i) => i.status !== 'CLOSED' && i.status !== 'RESOLVED').length;
 
+  // Editorial Landing Experience
+  if (currentView === 'welcome') {
+    return (
+      <WelcomeView
+        onEnterApp={() => setCurrentView('dashboard')}
+        onExploreArchitecture={() => setCurrentView('vault3d')}
+      />
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-[#030712] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white relative">
+    <div className="min-h-screen bg-[#07090D] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white relative">
       {/* Top Editorial Navbar */}
       <Navbar
         currentUser={currentUser}
@@ -219,7 +229,7 @@ export default function App() {
         />
 
         {/* Dynamic View Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#030712]/50 backdrop-blur-sm scrollbar-thin">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#0B0F14]/60 backdrop-blur-sm scrollbar-thin">
           {isLoading && !metrics ? (
             <div className="h-96 flex flex-col items-center justify-center space-y-4">
               <div className="w-10 h-10 rounded-full border-4 border-cyan-500/20 border-t-cyan-400 animate-spin" />
@@ -229,13 +239,6 @@ export default function App() {
             </div>
           ) : (
             <>
-              {currentView === 'welcome' && (
-                <WelcomeView
-                  onEnterApp={() => setCurrentView('dashboard')}
-                  onExploreArchitecture={() => setCurrentView('vault3d')}
-                />
-              )}
-
               {currentView === 'dashboard' && (
                 <DashboardView
                   metrics={metrics}

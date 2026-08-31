@@ -26,6 +26,7 @@ import {
   ShieldAlert,
   ShieldCheck,
   Smartphone,
+  Sparkles,
   Truck,
   UserCheck,
   Users,
@@ -66,6 +67,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'OVERVIEW',
       items: [
         { id: 'dashboard', label: 'Command Center', icon: Activity },
+        { id: 'welcome', label: 'Platform Editorial Landing', icon: Sparkles },
       ],
     },
     {
@@ -95,7 +97,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Anomaly Alerts',
           icon: AlertTriangle,
           badge: alertsCount > 0 ? alertsCount : undefined,
-          badgeColor: 'bg-rose-600 text-white shadow-[0_0_10px_rgba(244,63,94,0.4)]',
+          badgeColor: 'bg-rose-600 text-white',
         },
       ],
     },
@@ -107,7 +109,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           label: 'Investigation Room',
           icon: ShieldCheck,
           badge: incidentsCount > 0 ? incidentsCount : undefined,
-          badgeColor: 'bg-amber-500 text-slate-950 font-bold shadow-[0_0_10px_rgba(245,158,11,0.4)]',
+          badgeColor: 'bg-amber-500 text-slate-950 font-bold',
         },
       ],
     },
@@ -143,7 +145,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ];
 
   return (
-    <aside className="w-64 bg-slate-950/80 backdrop-blur-2xl border-r border-slate-800/80 flex flex-col shrink-0 select-none overflow-y-auto scrollbar-thin relative z-30 shadow-[4px_0_24px_rgba(0,0,0,0.3)]">
+    <aside className="w-64 bg-[#0B0F14]/90 backdrop-blur-2xl border-r border-slate-800/80 flex flex-col shrink-0 select-none overflow-y-auto scrollbar-thin relative z-30 shadow-[4px_0_24px_rgba(0,0,0,0.3)]">
       <div className="p-3 space-y-5 flex-1">
         {sections.map((section, sIdx) => (
           <div key={section.title || sIdx} className="space-y-1">
@@ -158,15 +160,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     key={item.id}
                     onClick={() => onSelectView(item.id)}
-                    className={`relative w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 group text-left ${
+                    className={`relative w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 group text-left cursor-pointer ${
                       isActive
-                        ? 'bg-gradient-to-r from-cyan-500/15 to-blue-500/10 text-cyan-300 border border-cyan-500/30 shadow-[0_0_15px_rgba(0,217,255,0.15)] font-semibold'
+                        ? 'bg-gradient-to-r from-cyan-500/15 to-blue-500/10 text-cyan-300 border border-cyan-500/30 font-semibold'
                         : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/60 border border-transparent'
                     }`}
                   >
                     {/* Active Left Indicator Bar */}
                     {isActive && (
-                      <span className="absolute left-0 inset-y-1.5 w-[3px] rounded-r-full bg-cyan-400 shadow-[0_0_8px_rgba(0,217,255,0.8)]" />
+                      <span className="absolute left-0 inset-y-1.5 w-[3px] rounded-r-full bg-cyan-400" />
                     )}
 
                     <div className="flex items-center gap-2.5 min-w-0">
@@ -198,9 +200,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-3 border-t border-slate-800/80 bg-slate-950/90 text-center">
+      <div className="p-3 border-t border-slate-800/80 bg-[#07090D] text-center">
         <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-slate-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.8)] animate-pulse" />
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
           <span>ZERO-TRUST SOC PERIMETER</span>
         </div>
       </div>
