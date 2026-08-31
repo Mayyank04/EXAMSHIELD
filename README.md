@@ -68,31 +68,6 @@ ExamShield features strict separation of duties:
 - Node.js version 18.0.0+
 - npm version 9.0.0+
 
-### Run Locally
-```bash
-# 1. Install dependencies
-npm install
-
-# 2. Start Fullstack Dev Server (Port 3000)
-npm run dev
-```
-
-Visit **`http://localhost:3000`** in your browser.
-
----
-
-## Verification & Build
-
-```bash
-# Typecheck (0 errors)
-npm run lint
-
-# Production Build
-npm run build
-
-# Start Production Server
-npm start
-```
 
 ---
 
