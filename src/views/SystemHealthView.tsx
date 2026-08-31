@@ -17,6 +17,8 @@ import {
   Smartphone,
   Zap,
 } from 'lucide-react';
+import { Card, CardContent } from '../components/ui/card.tsx';
+import { Button } from '../components/ui/liquid-glass-button.tsx';
 import { ProviderManager } from '../services/providers/index.ts';
 import { ServiceHealthStatus } from '../types/index.ts';
 
@@ -61,128 +63,101 @@ export const SystemHealthView: React.FC<SystemHealthViewProps> = ({ onRefresh })
   ];
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-300">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-blue-400">
-            <Cpu className="w-3.5 h-3.5" />
-            <span>INFRASTRUCTURE & PROVIDER HEALTH TELEMETRY</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600">
+            <Cpu className="w-4 h-4" />
+            <span>INFRASTRUCTURE TELEMETRY & ADAPTER HEALTH</span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight mt-1 font-heading">
-            System & API Health Center
+          <h1 className="text-2xl font-bold text-slate-900 font-heading mt-1">
+            System & API Service Health
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Real-time diagnostics for Cryptographic Ledger, AI Models, Armored Maps, IoT Fleet, and Authentication Gateway.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Microservice heartbeat checks, real vs mock provider toggles, and environment readiness.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
-          <button
-            onClick={handleToggleMode}
-            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition border ${
-              isProdMode
-                ? 'bg-emerald-950/60 border-emerald-500 text-emerald-300'
-                : 'bg-amber-950/60 border-amber-500 text-amber-300'
-            }`}
-          >
-            Switch to {isProdMode ? 'Demo Mode' : 'Production Mode'}
-          </button>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={fetchHealth}
             disabled={isLoading}
-            className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition"
+            className="flex items-center gap-1.5 text-xs font-semibold"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-400' : ''}`} />
-          </button>
+            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <span>Recheck Health</span>
+          </Button>
+
+          <Button
+            variant={isProdMode ? 'default' : 'secondary'}
+            size="sm"
+            onClick={handleToggleMode}
+            className="text-xs font-semibold"
+          >
+            {isProdMode ? 'Mode: Production Backend' : 'Mode: In-Memory Demo'}
+          </Button>
         </div>
       </div>
 
-      {/* Services Health Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {healthList.map((svc, idx) => {
-          const isConnected = svc.status === 'CONNECTED';
-          const isDemo = svc.status === 'DEMO MODE';
+      {/* Health Cards Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {healthList.map((svc, idx) => (
+          <Card key={idx} className="p-5 border-slate-200 bg-white shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-sm text-slate-900 font-heading">{svc.service}</span>
+              <span
+                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  svc.status === 'CONNECTED'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : svc.status === 'DEGRADED' || svc.status === 'DEMO MODE'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-rose-100 text-rose-800'
+                }`}
+              >
+                {svc.status}
+              </span>
+            </div>
 
-          return (
-            <div
-              key={idx}
-              className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg flex flex-col justify-between space-y-3"
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-xs font-bold text-slate-200">{svc.service}</span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                      isConnected
-                        ? 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                        : isDemo
-                        ? 'bg-blue-950 text-blue-300 border border-blue-800'
-                        : 'bg-amber-950 text-amber-300 border border-amber-800'
-                    }`}
-                  >
-                    {svc.status}
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 leading-relaxed font-sans">{svc.details}</p>
+            <div className="space-y-1.5 text-xs text-slate-600">
+              <div className="flex items-center justify-between">
+                <span>Active Provider:</span>
+                <strong className="text-slate-900">{svc.provider}</strong>
               </div>
-
-              <div className="pt-2 border-t border-slate-800 space-y-1 text-[10px] font-mono text-slate-500">
-                <div className="flex justify-between">
-                  <span>Provider:</span>
-                  <span className="text-slate-300 truncate max-w-[160px]">{svc.provider}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Latency:</span>
-                  <span className="text-emerald-400">{svc.latencyMs} ms</span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span>Latency:</span>
+                <span className="font-mono text-indigo-600 font-bold">{svc.latencyMs}ms</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Status Info:</span>
+                <span className="text-slate-500 truncate max-w-[160px]">{svc.details || 'Operating nominally'}</span>
               </div>
             </div>
-          );
-        })}
+          </Card>
+        ))}
       </div>
 
-      {/* Environment Variables & Provider Diagnostic Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-4">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-          <div>
-            <h3 className="text-sm font-bold text-white font-heading">
-              Environment Variables & Secret Key Vault Status
-            </h3>
-            <p className="text-[11px] text-slate-400">
-              Zero-Trust Architecture: Secrets are securely decoupled and never exposed to client-side bundles.
-            </p>
-          </div>
-          <span className="text-[10px] font-mono text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-            FIPS 140-3 COMPLIANT
-          </span>
+      {/* Environment Variable Audit */}
+      <Card className="p-5 border-slate-200 bg-white shadow-sm space-y-3">
+        <h3 className="text-xs font-bold text-slate-900 uppercase">
+          Environment & Security Key Status
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-xs">
+          {envChecklist.map((env, idx) => (
+            <div key={idx} className="p-3 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+              <div>
+                <div className="font-mono font-bold text-slate-900">{env.key}</div>
+                <div className="text-[10px] text-slate-500">{env.label}</div>
+              </div>
+              <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-200 text-slate-800">
+                {env.status}
+              </span>
+            </div>
+          ))}
         </div>
-
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse font-mono">
-            <thead>
-              <tr className="border-b border-slate-800 text-[10px] text-slate-400 uppercase">
-                <th className="p-3">Environment Identifier</th>
-                <th className="p-3">Component / Purpose</th>
-                <th className="p-3 text-right">Enclave Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800 text-slate-300">
-              {envChecklist.map((item) => (
-                <tr key={item.key} className="hover:bg-slate-800/40 transition">
-                  <td className="p-3 text-blue-400 font-bold">{item.key}</td>
-                  <td className="p-3 text-slate-300">{item.label}</td>
-                  <td className="p-3 text-right">
-                    <span className="px-2 py-0.5 rounded text-[10px] bg-slate-950 text-slate-300 border border-slate-800">
-                      {item.status}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      </Card>
     </div>
   );
 };

@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
-  AlertOctagon,
+  Activity,
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  ChevronRight,
   Filter,
   Flame,
   Radio,
-  RefreshCw,
   Search,
   ShieldAlert,
   ShieldCheck,
@@ -16,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Alert } from '../../types/index.ts';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card.tsx';
-import { LiquidButton } from '../ui/liquid-glass-button.tsx';
+import { Button } from '../ui/liquid-glass-button.tsx';
 import { IncidentCard } from './IncidentCard.tsx';
 
 interface IncidentFeedProps {
@@ -26,87 +25,53 @@ interface IncidentFeedProps {
 }
 
 export const IncidentFeed: React.FC<IncidentFeedProps> = ({
-  alerts,
+  alerts = [],
   onOpenInvestigation,
   onNavigateToIncidents,
 }) => {
   const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
-  const [searchTerm, setSearchTerm] = useState<string>('');
 
-  const filteredAlerts = alerts.filter((alert) => {
-    const matchesSeverity =
-      filterSeverity === 'ALL' ||
-      (filterSeverity === 'CRITICAL' && alert.severity === 'CRITICAL') ||
-      (filterSeverity === 'HIGH' && alert.severity === 'HIGH') ||
-      (filterSeverity === 'OPEN' && alert.status === 'OPEN');
-
-    const matchesSearch =
-      alert.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      alert.alertCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      alert.description.toLowerCase().includes(searchTerm.toLowerCase());
-
-    return matchesSeverity && matchesSearch;
+  const filteredAlerts = (alerts || []).filter((a) => {
+    if (filterSeverity === 'ALL') return true;
+    if (filterSeverity === 'INVESTIGATING') return a.status === 'INVESTIGATING';
+    return a.severity === filterSeverity;
   });
 
-  const criticalCount = alerts.filter((a) => a.severity === 'CRITICAL' && a.status !== 'RESOLVED').length;
-
   return (
-    <Card className="border-slate-800 bg-slate-900/40 backdrop-blur-xl shadow-2xl space-y-4">
-      <CardHeader className="p-5 pb-3 border-b border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <Card className="border-slate-200 bg-white shadow-sm overflow-hidden">
+      <CardHeader className="p-5 pb-3 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-bold text-rose-400">
+          <div className="flex items-center gap-2 text-xs font-semibold text-rose-600">
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>LIVE INCIDENT RESPONSE FEED</span>
+            <span>REAL-TIME INCIDENT RESPONSE FEED</span>
           </div>
-          <CardTitle className="text-base font-bold text-white mt-1">
-            Real-Time Threat Dockets & Anomaly Triage
+          <CardTitle className="text-base font-bold text-slate-900 mt-1">
+            Active Threat & Tamper Dockets
           </CardTitle>
         </div>
 
-        {/* Filter Tabs & Search */}
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="relative w-48">
-            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2 text-slate-500" />
-            <input
-              type="text"
-              placeholder="Filter alerts..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-950/80 border border-slate-800 pl-8 pr-2 py-1 rounded-xl text-xs font-mono text-slate-200 focus:outline-none focus:border-rose-500/50"
-            />
-          </div>
-
-          <div className="flex gap-1 p-1 rounded-xl bg-slate-950/80 border border-slate-800 text-xs font-mono">
-            {['ALL', 'CRITICAL', 'OPEN'].map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setFilterSeverity(tab)}
-                className={`px-3 py-1 rounded-lg transition text-[11px] font-bold ${
-                  filterSeverity === tab
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-slate-400 hover:text-slate-200'
-                }`}
-              >
-                {tab} {tab === 'CRITICAL' && criticalCount > 0 && `(${criticalCount})`}
-              </button>
-            ))}
-          </div>
-
-          <LiquidButton
-            variant="default"
-            size="sm"
-            onClick={onNavigateToIncidents}
-          >
-            <span>Investigation HQ</span>
-            <ArrowRight className="w-3 h-3" />
-          </LiquidButton>
+        {/* Severity Filter Controls */}
+        <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-200 text-xs font-medium">
+          {['ALL', 'CRITICAL', 'HIGH', 'INVESTIGATING'].map((sev) => (
+            <button
+              key={sev}
+              onClick={() => setFilterSeverity(sev)}
+              className={`px-3 py-1 rounded-lg transition cursor-pointer text-[11px] ${
+                filterSeverity === sev
+                  ? 'bg-white text-slate-900 font-bold shadow-xs'
+                  : 'text-slate-500 hover:text-slate-800'
+              }`}
+            >
+              {sev}
+            </button>
+          ))}
         </div>
       </CardHeader>
 
-      <CardContent className="p-5 pt-0">
+      <CardContent className="p-5">
         {filteredAlerts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredAlerts.map((alert) => (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredAlerts.slice(0, 6).map((alert) => (
               <IncidentCard
                 key={alert.id}
                 alert={alert}
@@ -115,14 +80,30 @@ export const IncidentFeed: React.FC<IncidentFeedProps> = ({
             ))}
           </div>
         ) : (
-          <div className="p-12 text-center rounded-2xl bg-slate-950/40 border border-slate-800/60 space-y-2">
-            <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
-            <h4 className="text-sm font-bold text-white">Security Perimeter Intact</h4>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
-              No active security violations matching the filter criteria. All 30 IoT sentinels and 10 transport corridors are reporting normal telemetry.
+          <div className="py-12 flex flex-col items-center justify-center text-center space-y-2">
+            <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+            <h4 className="text-sm font-bold text-slate-800">No Active Threats in Queue</h4>
+            <p className="text-xs text-slate-500 max-w-sm">
+              All 10 examination centres and armored corridors report normal baseline parameters.
             </p>
           </div>
         )}
+
+        {/* Bottom CTA to War Room */}
+        <div className="pt-4 mt-4 border-t border-slate-100 flex items-center justify-between">
+          <span className="text-xs text-slate-500">
+            Showing <strong>{Math.min(filteredAlerts.length, 6)}</strong> of {alerts.length} security alerts
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onNavigateToIncidents}
+            className="flex items-center gap-1.5 text-xs font-semibold"
+          >
+            <span>Open Forensic Investigation Room</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

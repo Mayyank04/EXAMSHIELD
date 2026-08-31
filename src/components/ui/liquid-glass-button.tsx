@@ -5,16 +5,16 @@ import { motion, type HTMLMotionProps } from 'framer-motion';
 import { cn } from '../../lib/utils.ts';
 
 const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-xs font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer',
+  'inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-xs font-semibold ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 select-none cursor-pointer',
   {
     variants: {
       variant: {
-        default: 'bg-blue-600 text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 hover:shadow-blue-500/40',
-        destructive: 'bg-rose-600 text-white shadow-lg shadow-rose-600/30 hover:bg-rose-500',
-        outline: 'border border-slate-700 bg-slate-900/60 hover:bg-slate-800 text-slate-200 hover:text-white',
-        secondary: 'bg-slate-800 text-slate-200 hover:bg-slate-700 hover:text-white',
-        ghost: 'hover:bg-slate-800/80 text-slate-300 hover:text-white',
-        link: 'text-blue-400 underline-offset-4 hover:underline',
+        default: 'bg-indigo-600 text-white shadow-sm hover:bg-indigo-700 active:scale-[0.98]',
+        destructive: 'bg-rose-600 text-white shadow-sm hover:bg-rose-700 active:scale-[0.98]',
+        outline: 'border border-slate-300 bg-white hover:bg-slate-50 text-slate-700 active:scale-[0.98]',
+        secondary: 'bg-slate-100 text-slate-800 hover:bg-slate-200 active:scale-[0.98]',
+        ghost: 'hover:bg-slate-100 text-slate-600 hover:text-slate-900',
+        link: 'text-indigo-600 underline-offset-4 hover:underline',
       },
       size: {
         default: 'h-9 px-4 py-2',
@@ -50,27 +50,29 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 );
 Button.displayName = 'Button';
 
-// Liquid Button Variants
+// Liquid Button Variants for Special Primary Actions
 const liquidbuttonVariants = cva(
-  'relative inline-flex items-center justify-center gap-2 font-medium transition-all duration-300 backdrop-blur-xl overflow-hidden cursor-pointer select-none',
+  'relative inline-flex items-center justify-center gap-2 font-semibold transition-all duration-200 overflow-hidden cursor-pointer select-none',
   {
     variants: {
       variant: {
         default:
-          'bg-gradient-to-b from-blue-500/20 via-cyan-500/10 to-transparent border border-cyan-400/40 text-cyan-300 shadow-[0_0_20px_rgba(0,217,255,0.15)] hover:border-cyan-300 hover:shadow-[0_0_25px_rgba(0,217,255,0.35)] hover:text-white',
+          'bg-gradient-to-r from-indigo-600 via-indigo-600 to-purple-600 text-white shadow-md hover:shadow-indigo-500/25 hover:brightness-105 active:scale-[0.98]',
         violet:
-          'bg-gradient-to-b from-purple-500/20 via-indigo-500/10 to-transparent border border-purple-400/40 text-purple-300 shadow-[0_0_20px_rgba(139,92,246,0.15)] hover:border-purple-300 hover:shadow-[0_0_25px_rgba(139,92,246,0.35)] hover:text-white',
+          'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md hover:shadow-purple-500/25 hover:brightness-105 active:scale-[0.98]',
         emerald:
-          'bg-gradient-to-b from-emerald-500/20 via-teal-500/10 to-transparent border border-emerald-400/40 text-emerald-300 shadow-[0_0_20px_rgba(16,185,129,0.15)] hover:border-emerald-300 hover:shadow-[0_0_25px_rgba(16,185,129,0.35)] hover:text-white',
+          'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-md hover:shadow-emerald-500/25 hover:brightness-105 active:scale-[0.98]',
         danger:
-          'bg-gradient-to-b from-rose-500/20 via-pink-500/10 to-transparent border border-rose-400/40 text-rose-300 shadow-[0_0_20px_rgba(244,63,94,0.15)] hover:border-rose-300 hover:shadow-[0_0_25px_rgba(244,63,94,0.35)] hover:text-white',
+          'bg-gradient-to-r from-rose-600 to-red-600 text-white shadow-md hover:shadow-rose-500/25 hover:brightness-105 active:scale-[0.98]',
         neutral:
-          'bg-slate-900/60 border border-slate-700/80 text-slate-200 shadow-lg hover:border-slate-500 hover:bg-slate-800/80 hover:text-white',
+          'bg-slate-900 text-white shadow-sm hover:bg-slate-800 active:scale-[0.98]',
+        outline:
+          'border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 shadow-sm active:scale-[0.98]',
       },
       size: {
-        default: 'h-9 px-4 py-2 rounded-xl text-xs',
-        sm: 'h-8 px-3 rounded-lg text-[11px]',
-        lg: 'h-11 px-6 rounded-2xl text-sm font-semibold',
+        default: 'h-9 px-4 py-2 text-xs rounded-xl',
+        sm: 'h-8 px-3 py-1 text-[11px] rounded-lg',
+        lg: 'h-11 px-6 py-2.5 text-sm rounded-2xl',
         icon: 'h-9 w-9 p-0 rounded-xl',
       },
     },
@@ -81,54 +83,46 @@ const liquidbuttonVariants = cva(
   }
 );
 
-export interface LiquidButtonProps
+interface LiquidButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof liquidbuttonVariants> {
-  glowEffect?: boolean;
-}
+    VariantProps<typeof liquidbuttonVariants> {}
 
 const LiquidButton = React.forwardRef<HTMLButtonElement, LiquidButtonProps>(
-  ({ className, variant, size, glowEffect = true, children, ...props }, ref) => {
+  ({ className, variant, size, children, ...props }, ref) => {
     return (
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.97 }}
-        transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-        ref={ref as any}
-        className={cn(liquidbuttonVariants({ variant, size, className }))}
-        {...(props as any)}
+      <button
+        ref={ref}
+        className={cn(liquidbuttonVariants({ variant, size }), className)}
+        {...props}
       >
-        {/* Inner Liquid Glass Light Reflection */}
-        <span className="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent opacity-75" />
-        <span className="absolute inset-0 bg-gradient-to-tr from-white/0 via-white/5 to-transparent pointer-events-none" />
-
-        {/* Content */}
         <span className="relative z-10 flex items-center gap-2">{children}</span>
-      </motion.button>
+      </button>
     );
   }
 );
 LiquidButton.displayName = 'LiquidButton';
 
-// Metal Tactical Button
-const MetalButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, size, children, ...props }, ref) => {
+// Clean Crisp Enterprise Button (MetalButton fallback)
+interface MetalButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+    VariantProps<typeof buttonVariants> {}
+
+const MetalButton = React.forwardRef<HTMLButtonElement, MetalButtonProps>(
+  ({ className, size = 'default', children, ...props }, ref) => {
     return (
-      <motion.button
-        whileHover={{ scale: 1.02 }}
-        whileTap={{ scale: 0.98 }}
-        ref={ref as any}
+      <button
+        ref={ref}
         className={cn(
-          'relative inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-b from-slate-700 via-slate-800 to-slate-950 px-4 py-2 text-xs font-bold text-slate-100 border border-slate-600 shadow-[inset_0_1px_0_rgba(255,255,255,0.2),0_4px_12px_rgba(0,0,0,0.5)] hover:from-slate-600 hover:via-slate-700 hover:to-slate-900 transition-all cursor-pointer select-none',
-          size === 'sm' && 'h-8 px-3 text-[11px]',
-          size === 'lg' && 'h-11 px-6 text-sm',
+          'inline-flex items-center justify-center gap-2 font-medium bg-white hover:bg-slate-50 border border-slate-300 text-slate-800 shadow-sm rounded-xl transition-all duration-200 cursor-pointer active:scale-[0.98]',
+          size === 'sm' && 'h-8 px-3 text-[11px] rounded-lg',
+          size === 'default' && 'h-9 px-4 text-xs rounded-xl',
+          size === 'lg' && 'h-11 px-6 text-sm rounded-2xl',
           className
         )}
-        {...(props as any)}
+        {...props}
       >
-        <span className="absolute inset-x-0 top-0 h-[1px] bg-white/30" />
-        <span className="relative z-10 flex items-center gap-2">{children}</span>
-      </motion.button>
+        {children}
+      </button>
     );
   }
 );

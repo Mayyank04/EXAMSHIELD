@@ -23,6 +23,20 @@ export class CryptoService {
   }
 
   /**
+   * Alias for computeSha256
+   */
+  public static async computeHash(data: string | object): Promise<string> {
+    return this.computeSha256(data);
+  }
+
+  /**
+   * Generates a deterministic mock digital signature for demo purposes.
+   */
+  public static async signData(hash: string): Promise<string> {
+    return `RSA2048-SIG-${hash.slice(0, 16).toUpperCase()}-${Date.now()}`;
+  }
+
+  /**
    * Synchronous SHA-256 fallback (standard FIPS 180-4 implementation)
    */
   public static fallbackSha256(ascii: string): string {
@@ -62,7 +76,7 @@ export class CryptoService {
       words[i >> 2] |= j << (((3 - i) % 4) * 8);
     }
     words[words.length] = (asciiBitLength / maxWord) | 0;
-    words[words.length] = asciiBitLength;
+    words[words.length] = asciiBitLength | 0;
 
     for (j = 0; j < words.length; ) {
       const w = words.slice(j, (j += 16));
@@ -72,18 +86,27 @@ export class CryptoService {
       for (i = 0; i < 64; i++) {
         const w15 = w[i - 15],
           w2 = w[i - 2];
-        const s0 = rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3);
-        const s1 = rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10);
-        w[i] = i < 16 ? w[i] : (w[i - 16] + s0 + w[i - 7] + s1) | 0;
+        const a = hash[0],
+          e = hash[4];
+        const temp1 =
+          hash[7] +
+          (rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25)) +
+          ((e & hash[5]) ^ (~e & hash[6])) +
+          k[i] +
+          (w[i] =
+            i < 16
+              ? w[i]
+              : (w[i - 16] +
+                  (rightRotate(w15, 7) ^ rightRotate(w15, 18) ^ (w15 >>> 3)) +
+                  w[i - 7] +
+                  (rightRotate(w2, 17) ^ rightRotate(w2, 19) ^ (w2 >>> 10))) |
+                0);
+        const temp2 =
+          (rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22)) +
+          ((a & hash[1]) ^ (a & hash[2]) ^ (hash[1] & hash[2]));
 
-        const s1_ = rightRotate(hash[4], 6) ^ rightRotate(hash[4], 11) ^ rightRotate(hash[4], 25);
-        const ch = (hash[4] & hash[5]) ^ (~hash[4] & hash[6]);
-        const temp1 = (hash[7] + s1_ + ch + k[i] + w[i]) | 0;
-        const s0_ = rightRotate(hash[0], 2) ^ rightRotate(hash[0], 13) ^ rightRotate(hash[0], 22);
-        const maj = (hash[0] & hash[1]) ^ (hash[0] & hash[2]) ^ (hash[1] & hash[2]);
-        const temp2 = (s0_ + maj) | 0;
-
-        hash = [(temp1 + temp2) | 0, hash[0], hash[1], hash[2], (hash[3] + temp1) | 0, hash[4], hash[5], hash[6]];
+        hash = [(temp1 + temp2) | 0, ...hash];
+        hash[4] = (hash[4] + temp1) | 0;
       }
 
       for (i = 0; i < 8; i++) {
@@ -92,9 +115,11 @@ export class CryptoService {
     }
 
     for (i = 0; i < 8; i++) {
-      for (let b = 3; b >= 0; b--) {
-        const byte = (hash[i] >> (8 * b)) & 255;
-        result += byte.toString(16).padStart(2, '0');
+      for (i = 0; i < 8; i++) {
+        for (j = 3; j >= 0; j--) {
+          const b = (hash[i] >> (8 * j)) & 255;
+          result += (b < 16 ? '0' : '') + b.toString(16);
+        }
       }
     }
     return result;

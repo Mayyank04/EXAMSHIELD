@@ -23,7 +23,7 @@ import {
   Zap,
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card.tsx';
-import { LiquidButton, MetalButton } from '../components/ui/liquid-glass-button.tsx';
+import { Button, LiquidButton } from '../components/ui/liquid-glass-button.tsx';
 import { api } from '../services/api.ts';
 import { ExamCentre, Package, TransportRoute } from '../types/index.ts';
 
@@ -35,9 +35,9 @@ interface TransportViewProps {
 }
 
 export const TransportView: React.FC<TransportViewProps> = ({
-  packages,
-  centres,
-  routes,
+  packages = [],
+  centres = [],
+  routes = [],
   onRefresh,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -58,125 +58,106 @@ export const TransportView: React.FC<TransportViewProps> = ({
       const map = L.map(mapContainerRef.current, {
         center: [28.55, 77.25],
         zoom: 10,
-        zoomControl: true,
+        attributionControl: false,
       });
 
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
-        maxZoom: 18,
-      }).addTo(map);
+      // CartoDB Positron clean light tile layer
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+        {
+          maxZoom: 19,
+          subdomains: 'abcd',
+        }
+      ).addTo(map);
 
       layerGroupRef.current = L.layerGroup().addTo(map);
       mapInstanceRef.current = map;
     }
 
-    const layerGroup = layerGroupRef.current;
-    if (layerGroup) {
-      layerGroup.clearLayers();
-
-      // 1. Draw Exam Centres
-      centres.forEach((c) => {
-        const isHighAlert = c.status === 'HIGH_ALERT';
-        const circle = L.circleMarker(c.coords, {
-          radius: isHighAlert ? 8 : 6,
-          color: isHighAlert ? '#ef4444' : '#10b981',
-          fillColor: isHighAlert ? '#ef4444' : '#059669',
-          fillOpacity: 0.85,
-          weight: 2,
-        });
-
-        circle.bindPopup(`
-          <div style="font-family: sans-serif; font-size: 11px; padding: 2px;">
-            <strong style="color: #0f172a; font-size: 12px;">${c.name}</strong><br/>
-            <span>Code: ${c.code} | City: ${c.city}</span><br/>
-            <span>Security Score: <strong>${c.securityScore}/100</strong></span><br/>
-            <span>Superintendent: ${c.superintendentName}</span>
-          </div>
-        `);
-        layerGroup.addLayer(circle);
-      });
-
-      // 2. Draw Authorized Geofence Route Corridors
-      routes.forEach((r) => {
-        const polyline = L.polyline(r.waypoints, {
-          color: '#00D9FF',
-          weight: 4,
-          opacity: 0.85,
-          dashArray: '6, 6',
-        });
-        polyline.bindPopup(`<strong>Corridor: ${r.name}</strong><br/>Tolerance: ${r.corridorToleranceKm} km`);
-        layerGroup.addLayer(polyline);
-      });
-    }
-
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-        layerGroupRef.current = null;
-        vehicleMarkerRef.current = null;
-      }
-    };
-  }, [centres, routes]);
-
-  // Update vehicle position marker
-  useEffect(() => {
-    if (!mapInstanceRef.current || !activePackage) return;
     const map = mapInstanceRef.current;
+    const layers = layerGroupRef.current;
+    if (!map || !layers) return;
 
-    const lat = activePackage.currentLocation.lat;
-    const lng = activePackage.currentLocation.lng;
-    const isBreached = activePackage.tamperState === 'BREACHED';
-    const isDeviated = (activePackage.routeDeviationKm ?? 0) > 2.0;
+    layers.clearLayers();
 
-    const customIcon = L.divIcon({
-      className: 'custom-vehicle-pin',
-      html: `
-        <div style="
-          width: 34px;
-          height: 34px;
-          background: ${isBreached ? '#ef4444' : isDeviated ? '#f59e0b' : '#00D9FF'};
-          border: 3px solid #ffffff;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          box-shadow: 0 0 20px ${isBreached ? 'rgba(239,68,68,0.9)' : isDeviated ? 'rgba(245,158,11,0.9)' : 'rgba(0,217,255,0.9)'};
-          color: ${isBreached || isDeviated ? 'white' : '#030712'};
-          font-size: 14px;
-          font-weight: bold;
-        ">
-          🚛
-        </div>
-      `,
-      iconSize: [34, 34],
-      iconAnchor: [17, 17],
+    // Plot Exam Strongrooms
+    centres.forEach((c) => {
+      const centreIcon = L.divIcon({
+        className: 'custom-centre-marker',
+        html: `<div style="background:#4F46E5; color:white; border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.2); font-size:10px; font-weight:bold;">🏛</div>`,
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+      });
+
+      L.marker(c.coords, { icon: centreIcon })
+        .bindPopup(`<strong>${c.name}</strong><br/>City: ${c.city}<br/>Security Score: ${c.securityScore}%`)
+        .addTo(layers);
     });
 
-    if (vehicleMarkerRef.current) {
-      vehicleMarkerRef.current.setLatLng([lat, lng]);
-      vehicleMarkerRef.current.setIcon(customIcon);
-    } else {
-      vehicleMarkerRef.current = L.marker([lat, lng], { icon: customIcon }).addTo(map);
+    // Plot Transport Route & Corridor
+    if (routes.length > 0 && routes[0]?.waypoints) {
+      const routeCoords = routes[0].waypoints;
+
+      // Safe Haversine Corridor Buffer
+      L.polyline(routeCoords, {
+        color: '#4F46E5',
+        weight: 12,
+        opacity: 0.15,
+      }).addTo(layers);
+
+      // Main Approved Track
+      L.polyline(routeCoords, {
+        color: '#4F46E5',
+        weight: 3,
+        opacity: 0.9,
+      }).addTo(layers);
     }
 
-    vehicleMarkerRef.current.bindPopup(`
-      <div style="font-family: sans-serif; font-size: 11px;">
-        <strong>Carrier: DL-1VB-9921</strong><br/>
-        <span>Package: ${activePackage.packageCode}</span><br/>
-        <span>Officer: ${activePackage.transportOfficerName}</span><br/>
-        <span>Deviation: <strong>${activePackage.routeDeviationKm} km</strong></span><br/>
-        <span>Tamper State: <strong style="color:${isBreached ? '#ef4444' : '#10b981'}">${activePackage.tamperState}</strong></span>
-      </div>
-    `);
+    // Plot Active Vehicle Marker
+    if (activePackage?.currentLocation) {
+      const isBreached = activePackage.tamperState === 'BREACHED';
+      const markerColor = isBreached ? '#DC2626' : '#2563EB';
 
-    map.panTo([lat, lng]);
-  }, [activePackage]);
+      const vehicleIcon = L.divIcon({
+        className: 'custom-vehicle-marker',
+        html: `<div style="background:${markerColor}; color:white; border-radius:8px; width:32px; height:32px; display:flex; align-items:center; justify-content:center; border:2px solid white; box-shadow:0 4px 8px rgba(0,0,0,0.25); font-size:14px;">🚚</div>`,
+        iconSize: [32, 32],
+        iconAnchor: [16, 16],
+      });
 
-  const handleSimulateDeviation = async () => {
+      vehicleMarkerRef.current = L.marker(
+        [activePackage.currentLocation.lat, activePackage.currentLocation.lng],
+        { icon: vehicleIcon }
+      )
+        .bindPopup(
+          `<strong>${activePackage.packageCode}</strong><br/>Destination: ${activePackage.destinationCentreName}<br/>Officer: ${activePackage.transportOfficerName}<br/>Speed: ${activePackage.currentLocation.speedKmh} km/h`
+        )
+        .addTo(layers);
+    }
+  }, [centres, routes, activePackage]);
+
+  const handleSimulateRouteDeviation = async () => {
+    if (!activePackage) return;
     setIsSimulatingDeviation(true);
     try {
-      await api.simulateGpsDeviation(activePackage.id, 3.8);
+      await api.recordIoTEvent({
+        deviceId: activePackage.sensorDeviceId || 'IOT-DEV-001',
+        packageId: activePackage.id,
+        eventType: 'GPS_UPDATED',
+        location: {
+          lat: 28.4812,
+          lng: 77.4521,
+          address: 'Unauthorized Corridor Diversion, Sector 128 Greater Noida',
+        },
+        sensorValues: {
+          reedSwitch: 'CLOSED',
+          temperature: 24.1,
+          light: 12,
+          shock: 0.4,
+        },
+        severity: 'HIGH',
+      });
+      alert('Simulated route corridor deviation (2.8 km departure) committed.');
       onRefresh();
     } catch (err: any) {
       alert(`Simulation error: ${err.message}`);
@@ -186,9 +167,27 @@ export const TransportView: React.FC<TransportViewProps> = ({
   };
 
   const handleSimulateTamper = async () => {
+    if (!activePackage) return;
     setIsSimulatingTamper(true);
     try {
-      await api.simulateTamper(activePackage.id);
+      await api.recordIoTEvent({
+        deviceId: activePackage.sensorDeviceId || 'IOT-DEV-001',
+        packageId: activePackage.id,
+        eventType: 'TAMPER_DETECTED',
+        location: {
+          lat: activePackage.currentLocation?.lat || 28.5355,
+          lng: activePackage.currentLocation?.lng || 77.391,
+          address: activePackage.currentLocation?.address || 'Noida Corridor Transit',
+        },
+        sensorValues: {
+          reedSwitch: 'OPEN',
+          temperature: 34.2,
+          light: 512,
+          shock: 3.1,
+        },
+        severity: 'CRITICAL',
+      });
+      alert('Simulated magnetic seal rupture and ambient lux spike committed.');
       onRefresh();
     } catch (err: any) {
       alert(`Simulation error: ${err.message}`);
@@ -197,180 +196,163 @@ export const TransportView: React.FC<TransportViewProps> = ({
     }
   };
 
-  const isBreached = activePackage?.tamperState === 'BREACHED';
-  const isDeviated = (activePackage?.routeDeviationKm ?? 0) > 2.0;
-
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-300">
-      {/* Header */}
-      <Card className="border-cyan-500/20 bg-gradient-to-br from-slate-950 via-[#050B18] to-[#0A1425] p-6 shadow-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      {/* Top Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-cyan-400">
-            <Radio className="w-3.5 h-3.5 animate-pulse" />
-            <span>SECURE TRANSPORT NETWORK & ARMORED LOGISTICS RADAR</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600">
+            <Truck className="w-4 h-4" />
+            <span>SECURE LOGISTICS & ARMORED TRANSIT</span>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight mt-1 font-heading">
-            Armored Transit Radar & Geofence Corridor
+          <h1 className="text-2xl font-bold text-slate-900 font-heading mt-1">
+            Armored Transit Radar & Corridor Telemetry
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Real-time GPS tracking, electronic seal telemetry, and autonomous Haversine geofence deviation detection.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Real-time GPS tracking, electronic geofence corridors, kinetic shock detection, and escort telemetry.
           </p>
         </div>
 
-        <select
-          value={selectedPkgId}
-          onChange={(e) => setSelectedPkgId(e.target.value)}
-          className="bg-slate-900 border border-slate-700/80 px-3.5 py-2 rounded-xl text-slate-200 text-xs font-mono focus:outline-none focus:border-cyan-500 shadow-inner"
-        >
-          {packages.map((pkg) => (
-            <option key={pkg.id} value={pkg.id}>
-              {pkg.packageCode} ({pkg.destinationCentreName})
-            </option>
-          ))}
-        </select>
-      </Card>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
+          <Radio className="w-4 h-4 text-emerald-600 animate-pulse" />
+          <span>Active LTE Sentinel Uplink</span>
+        </div>
+      </div>
 
-      {/* Map & Logistics Panel Grid */}
+      {/* Main Map + Inspector Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left: Map View (8 Cols) */}
-        <div className="lg:col-span-8">
-          <Card className="border-slate-800 bg-slate-900/60 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col">
-            <div className="p-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/80">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse" />
-                <span className="font-mono text-xs font-bold text-slate-200">
-                  Corridor Map • {activePackage?.packageCode}
-                </span>
-              </div>
-              <div className="flex items-center gap-3 text-[11px] font-mono text-slate-400">
-                <span>Geofence Tolerance: 2.0 km</span>
-                <span className="text-cyan-400">Leaflet Radar Active</span>
-              </div>
-            </div>
+        {/* Left Column: Interactive Leaflet Map (8 Cols) */}
+        <div className="lg:col-span-8 space-y-4">
+          <Card className="p-2 border-slate-200 bg-white shadow-sm overflow-hidden relative">
+            <div
+              ref={mapContainerRef}
+              className="h-[460px] w-full rounded-2xl z-10"
+            />
 
-            <div className="h-[480px] w-full relative">
-              <div ref={mapContainerRef} className="w-full h-full" />
+            {/* Map Overlay Badge */}
+            <div className="absolute top-5 left-5 z-20 p-2.5 rounded-xl bg-white/90 border border-slate-200 backdrop-blur-md shadow-sm text-xs font-medium text-slate-700">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                <span className="font-bold text-slate-900">National Transit Radar</span>
+              </div>
+              <div className="text-[10px] text-slate-500 mt-0.5">Geofence Tolerance: 2.0 km</div>
             </div>
           </Card>
         </div>
 
-        {/* Right: Active Vehicle Telemetry & Simulation (4 Cols) */}
+        {/* Right Column: Vehicle & Corridor Inspector (4 Cols) */}
         <div className="lg:col-span-4 space-y-4">
-          <Card className="border-slate-800 bg-slate-900/60 backdrop-blur-xl p-5 shadow-2xl space-y-4 text-xs">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800/80">
-              <div>
-                <h3 className="text-sm font-bold text-white font-heading">{activePackage?.packageCode}</h3>
-                <p className="text-[10px] font-mono text-slate-400">Carrier: DL-1VB-9921</p>
-              </div>
-              <span
-                className={`px-2 py-0.5 rounded-lg text-[10px] font-mono font-bold border ${
-                  isBreached
-                    ? 'bg-rose-950 text-rose-300 border-rose-700 animate-pulse'
-                    : isDeviated
-                    ? 'bg-amber-950 text-amber-300 border-amber-700'
-                    : 'bg-emerald-950 text-emerald-300 border-emerald-800'
-                }`}
-              >
-                {activePackage?.tamperState}
-              </span>
+          {/* Active Vehicle Selection */}
+          <Card className="p-5 border-slate-200 bg-white shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-900 font-heading">
+                Armored Carriers ({packages.length})
+              </h3>
+              <span className="text-[10px] font-semibold text-indigo-600">Live Escorts</span>
             </div>
 
-            {/* Live Sensor Metrics Grid */}
-            <div className="grid grid-cols-2 gap-2.5">
-              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <div className="text-[10px] font-mono text-slate-500 uppercase flex items-center gap-1">
-                  <Lock className="w-3 h-3 text-slate-400" />
-                  <span>Reed Switch</span>
-                </div>
-                <div
-                  className={`font-mono font-bold text-xs ${
-                    activePackage?.lastTelemetry.reedSwitch === 'OPEN'
-                      ? 'text-rose-400'
-                      : 'text-emerald-400'
-                  }`}
-                >
-                  {activePackage?.lastTelemetry.reedSwitch}
-                </div>
-              </div>
+            <div className="space-y-2">
+              {packages.map((pkg) => {
+                const isSelected = pkg.id === selectedPkgId;
+                const isBreached = pkg.tamperState === 'BREACHED';
 
-              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <div className="text-[10px] font-mono text-slate-500 uppercase flex items-center gap-1">
-                  <Thermometer className="w-3 h-3 text-cyan-400" />
-                  <span>Temperature</span>
-                </div>
-                <div className="font-mono font-bold text-xs text-slate-200">
-                  {activePackage?.lastTelemetry.temperature}°C
-                </div>
-              </div>
+                return (
+                  <div
+                    key={pkg.id}
+                    onClick={() => setSelectedPkgId(pkg.id)}
+                    className={`p-3 rounded-xl border cursor-pointer transition flex items-center justify-between text-xs ${
+                      isSelected
+                        ? 'border-indigo-500 bg-indigo-50/50 shadow-xs'
+                        : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div>
+                      <div className="font-bold text-slate-900">{pkg.packageCode}</div>
+                      <div className="text-[11px] text-slate-500 truncate max-w-[160px]">
+                        To: {pkg.destinationCentreName}
+                      </div>
+                    </div>
 
-              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <div className="text-[10px] font-mono text-slate-500 uppercase flex items-center gap-1">
-                  <Compass className="w-3 h-3 text-amber-400" />
-                  <span>Corridor Deviation</span>
-                </div>
-                <div
-                  className={`font-mono font-bold text-xs ${
-                    isDeviated ? 'text-amber-400' : 'text-slate-200'
-                  }`}
-                >
-                  {activePackage?.routeDeviationKm} km
-                </div>
-              </div>
-
-              <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-1">
-                <div className="text-[10px] font-mono text-slate-500 uppercase flex items-center gap-1">
-                  <Gauge className="w-3 h-3 text-slate-400" />
-                  <span>Speed / ETA</span>
-                </div>
-                <div className="font-mono font-bold text-xs text-slate-200">
-                  {activePackage?.currentLocation.speedKmh} km/h • {activePackage?.eta}
-                </div>
-              </div>
-            </div>
-
-            {/* Transport Details */}
-            <div className="space-y-2 pt-2 border-t border-slate-800/80 text-[11px] text-slate-400">
-              <div className="flex justify-between">
-                <span>Destination:</span>
-                <span className="text-slate-200">{activePackage?.destinationCentreName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Transport Officer:</span>
-                <span className="text-slate-200">{activePackage?.transportOfficerName}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Seal ID:</span>
-                <span className="font-mono text-cyan-300">{activePackage?.sealId}</span>
-              </div>
-            </div>
-
-            {/* Simulation Action Controls with LiquidButtons */}
-            <div className="space-y-2 pt-2 border-t border-slate-800/80">
-              <div className="text-[10px] font-mono font-semibold text-slate-400 uppercase">
-                Interactive Attack Triggers
-              </div>
-              <LiquidButton
-                variant="default"
-                size="default"
-                className="w-full"
-                onClick={handleSimulateDeviation}
-                disabled={isSimulatingDeviation}
-              >
-                <Compass className="w-3.5 h-3.5" />
-                <span>Simulate Corridor Deviation (3.8 km)</span>
-              </LiquidButton>
-              <LiquidButton
-                variant="danger"
-                size="default"
-                className="w-full"
-                onClick={handleSimulateTamper}
-                disabled={isSimulatingTamper}
-              >
-                <Flame className="w-3.5 h-3.5" />
-                <span>Simulate Physical Box Compromise</span>
-              </LiquidButton>
+                    <span
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        isBreached
+                          ? 'bg-rose-100 text-rose-800'
+                          : pkg.status === 'IN_TRANSIT'
+                          ? 'bg-indigo-100 text-indigo-800'
+                          : 'bg-emerald-100 text-emerald-800'
+                      }`}
+                    >
+                      {isBreached ? 'BREACHED' : pkg.status}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </Card>
+
+          {/* Telemetry Detail Card */}
+          {activePackage && (
+            <Card className="p-5 border-slate-200 bg-white shadow-sm space-y-4">
+              <div className="border-b border-slate-100 pb-3">
+                <div className="text-[10px] font-semibold text-slate-500 uppercase">Carrier Telemetry</div>
+                <h4 className="text-sm font-bold text-slate-900 font-heading mt-0.5">
+                  {activePackage.packageCode}
+                </h4>
+              </div>
+
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Escort Commander:</span>
+                  <span className="font-bold text-slate-800">{activePackage.transportOfficerName}</span>
+                </div>
+                <div className="flex items-center justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Transit Speed:</span>
+                  <span className="font-bold text-indigo-600 font-mono">
+                    {activePackage.currentLocation?.speedKmh || 42} km/h
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1 border-b border-slate-100">
+                  <span className="text-slate-500">Corridor Deviation:</span>
+                  <span
+                    className={`font-bold font-mono ${
+                      activePackage.routeDeviationKm > 2 ? 'text-rose-600' : 'text-emerald-600'
+                    }`}
+                  >
+                    {activePackage.routeDeviationKm || 0.1} km
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-1">
+                  <span className="text-slate-500">Estimated Arrival:</span>
+                  <span className="font-bold text-slate-800 font-mono">{activePackage.eta || '11:45 AM'}</span>
+                </div>
+              </div>
+
+              {/* Simulation Triggers - Clean Action Hierarchy */}
+              <div className="space-y-2 pt-2 border-t border-slate-100">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSimulateRouteDeviation}
+                  disabled={isSimulatingDeviation}
+                  className="w-full text-xs font-semibold"
+                >
+                  <Navigation className="w-3.5 h-3.5" />
+                  <span>Simulate Corridor Deviation</span>
+                </Button>
+
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={handleSimulateTamper}
+                  disabled={isSimulatingTamper}
+                  className="w-full text-xs font-semibold"
+                >
+                  <Flame className="w-3.5 h-3.5" />
+                  <span>Simulate Seal Breach Event</span>
+                </Button>
+              </div>
+            </Card>
+          )}
         </div>
       </div>
     </div>

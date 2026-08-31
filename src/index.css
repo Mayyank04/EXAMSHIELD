@@ -2,28 +2,38 @@
 
 @layer base {
   :root {
-    --font-sans: 'Inter', 'Outfit', system-ui, -apple-system, sans-serif;
+    --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    
+    --bg-main: #F8FAFC;
+    --bg-card: #FFFFFF;
+    --border-subtle: #E2E8F0;
+    --text-primary: #0F172A;
+    --text-secondary: #475569;
+    --text-muted: #64748B;
+    --accent-primary: #4F46E5;
+    --accent-blue: #2563EB;
   }
 
   body {
     font-family: var(--font-sans);
-    background-color: #030712;
-    color: #F8FAFC;
+    background-color: var(--bg-main);
+    color: var(--text-primary);
     overflow-x: hidden;
     background-image: 
-      radial-gradient(circle at 50% 0%, rgba(0, 217, 255, 0.08) 0%, transparent 60%),
-      radial-gradient(circle at 100% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
-      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+      radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 100% 100%, rgba(37, 99, 235, 0.02) 0%, transparent 40%),
+      linear-gradient(to right, rgba(226, 232, 240, 0.4) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(226, 232, 240, 0.4) 1px, transparent 1px);
+    background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
     background-attachment: fixed;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
+    color: var(--text-primary);
   }
 
   code, pre, .font-mono {
@@ -31,77 +41,53 @@
   }
 }
 
-/* Custom Scrollbar */
+/* Crisp Modern Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #030712;
+  background: #F1F5F9;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1E293B;
+  background: #CBD5E1;
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: #94A3B8;
 }
 
-/* Glassmorphic Layer Utilities */
-.glass-panel {
-  background: rgba(10, 20, 40, 0.65);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(100, 180, 255, 0.14);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+/* Refined Light Enterprise Cards */
+.enterprise-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+  transition: all 0.2s ease-in-out;
 }
 
-.glass-panel-subtle {
-  background: rgba(5, 11, 24, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(100, 180, 255, 0.1);
+.enterprise-card:hover {
+  border-color: #CBD5E1;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.06), 0 2px 4px -2px rgba(0, 0, 0, 0.04);
 }
 
+/* Glassmorphic Layer Utilities for Floating Panels */
 .glass-panel-light {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* Glow Borders */
-.glow-border-cyan {
-  box-shadow: 0 0 25px -5px rgba(0, 217, 255, 0.3);
+@keyframes pulse-slow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 
-.glow-border-purple {
-  box-shadow: 0 0 25px -5px rgba(139, 92, 246, 0.3);
-}
-
-.glow-border-emerald {
-  box-shadow: 0 0 25px -5px rgba(16, 185, 129, 0.3);
-}
-
-.glow-border-red {
-  box-shadow: 0 0 25px -5px rgba(244, 63, 94, 0.4);
-}
-
-/* Pulse Animations */
-@keyframes subtle-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.02); }
-}
-
-.animate-subtle-pulse {
-  animation: subtle-pulse 3s infinite ease-in-out;
-}
-
-/* Leaflet Map vehicle custom icon */
-.custom-vehicle-pin {
-  background: transparent;
-  border: none;
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }

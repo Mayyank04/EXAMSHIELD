@@ -1,13 +1,10 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
   Activity,
-  AlertOctagon,
   AlertTriangle,
   BookOpen,
   Boxes,
   BrainCircuit,
-  CheckCircle2,
   Cpu,
   FileCheck2,
   FileText,
@@ -18,18 +15,12 @@ import {
   Layers,
   Lock,
   MapPin,
-  Radio,
-  RefreshCw,
-  Search,
-  Server,
   Shield,
   ShieldAlert,
   ShieldCheck,
   Smartphone,
   Sparkles,
   Truck,
-  UserCheck,
-  Users,
   Zap,
 } from 'lucide-react';
 import { UserRole } from '../types/index.ts';
@@ -67,7 +58,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'OVERVIEW',
       items: [
         { id: 'dashboard', label: 'Command Center', icon: Activity },
-        { id: 'welcome', label: 'Platform Editorial Landing', icon: Sparkles },
+        { id: 'welcome', label: 'Platform Landing', icon: Sparkles },
       ],
     },
     {
@@ -81,23 +72,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       title: 'SECURE LOGISTICS',
       items: [
-        { id: 'transport', label: 'Armored Transit Radar', icon: Truck },
+        { id: 'transport', label: 'Armored Transit', icon: Truck },
         { id: 'packages', label: 'Smart Exam Boxes', icon: Boxes },
         { id: 'handover', label: 'Two-Party Handover', icon: KeyRound },
         { id: 'custody', label: 'Chain of Custody', icon: Layers },
       ],
     },
     {
-      title: 'AI THREAT INTELLIGENCE',
+      title: 'THREAT INTELLIGENCE',
       items: [
-        { id: 'insider', label: 'Insider Threat Engine', icon: BrainCircuit },
+        { id: 'insider', label: 'Insider Threats', icon: BrainCircuit },
         { id: 'leak', label: 'Paper Leak Analysis', icon: ShieldAlert },
         {
           id: 'alerts',
           label: 'Anomaly Alerts',
           icon: AlertTriangle,
           badge: alertsCount > 0 ? alertsCount : undefined,
-          badgeColor: 'bg-rose-600 text-white',
+          badgeColor: 'bg-rose-100 text-rose-700 font-bold',
         },
       ],
     },
@@ -107,26 +98,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {
           id: 'incidents',
           label: 'Investigation Room',
-          icon: ShieldCheck,
+          icon: ShieldAlert,
           badge: incidentsCount > 0 ? incidentsCount : undefined,
-          badgeColor: 'bg-amber-500 text-slate-950 font-bold',
+          badgeColor: 'bg-amber-100 text-amber-800 font-bold',
         },
       ],
     },
     {
-      title: 'INFRASTRUCTURE & 3D',
+      title: 'INFRASTRUCTURE',
       items: [
-        { id: 'iot', label: 'IoT Sensor Fleet (30)', icon: Smartphone },
-        { id: 'centres', label: 'Exam Centres (10)', icon: MapPin },
+        { id: 'iot', label: 'IoT Sensor Fleet', icon: Smartphone },
+        { id: 'centres', label: 'Exam Centres', icon: MapPin },
         { id: 'vault3d', label: '3D Security Vault', icon: Globe },
       ],
     },
     {
-      title: 'GOVERNANCE & AUDIT',
+      title: 'ADMINISTRATION',
       items: [
+        { id: 'admin', label: 'Admin Panel', icon: ShieldCheck },
         { id: 'policies', label: 'Security Policies', icon: Lock },
         { id: 'blockchain', label: 'Immutable Ledger', icon: Layers },
-        { id: 'audit', label: 'Audit Trail Logs', icon: FileText },
+        { id: 'audit', label: 'Audit Logs', icon: FileText },
       ],
     },
     {
@@ -136,20 +128,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'demo', label: '10-Step Master Demo', icon: Zap },
       ],
     },
-    {
-      title: 'SYSTEM & ADMIN',
-      items: [
-        { id: 'health', label: 'API & System Health', icon: Cpu },
-      ],
-    },
   ];
 
   return (
-    <aside className="w-64 bg-[#0B0F14]/90 backdrop-blur-2xl border-r border-slate-800/80 flex flex-col shrink-0 select-none overflow-y-auto scrollbar-thin relative z-30 shadow-[4px_0_24px_rgba(0,0,0,0.3)]">
+    <aside className="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 select-none overflow-y-auto scrollbar-thin relative z-20">
       <div className="p-3 space-y-5 flex-1">
         {sections.map((section, sIdx) => (
           <div key={section.title || sIdx} className="space-y-1">
-            <div className="px-3 text-[10px] font-mono font-bold tracking-wider text-slate-400 uppercase">
+            <div className="px-3 text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
               {section.title}
             </div>
             <div className="space-y-0.5">
@@ -160,23 +146,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   <button
                     key={item.id}
                     onClick={() => onSelectView(item.id)}
-                    className={`relative w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all duration-200 group text-left cursor-pointer ${
+                    className={`relative w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-all duration-150 group text-left cursor-pointer ${
                       isActive
-                        ? 'bg-gradient-to-r from-cyan-500/15 to-blue-500/10 text-cyan-300 border border-cyan-500/30 font-semibold'
-                        : 'text-slate-400 hover:text-slate-100 hover:bg-slate-900/60 border border-transparent'
+                        ? 'bg-indigo-50/80 text-indigo-700 font-semibold'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50 font-medium'
                     }`}
                   >
                     {/* Active Left Indicator Bar */}
                     {isActive && (
-                      <span className="absolute left-0 inset-y-1.5 w-[3px] rounded-r-full bg-cyan-400" />
+                      <span className="absolute left-0 inset-y-2 w-[3px] rounded-r-full bg-indigo-600" />
                     )}
 
                     <div className="flex items-center gap-2.5 min-w-0">
                       <Icon
                         className={`w-4 h-4 shrink-0 transition-colors ${
                           isActive
-                            ? 'text-cyan-400'
-                            : 'text-slate-500 group-hover:text-slate-200'
+                            ? 'text-indigo-600'
+                            : 'text-slate-400 group-hover:text-slate-700'
                         }`}
                       />
                       <span className="truncate">{item.label}</span>
@@ -185,7 +171,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                     {item.badge !== undefined && (
                       <span
                         className={`px-1.5 py-0.2 rounded-full text-[10px] font-mono font-bold shrink-0 ${
-                          item.badgeColor || 'bg-slate-800 text-slate-300'
+                          item.badgeColor || 'bg-slate-100 text-slate-600'
                         }`}
                       >
                         {item.badge}
@@ -200,10 +186,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
       </div>
 
       {/* Sidebar Footer */}
-      <div className="p-3 border-t border-slate-800/80 bg-[#07090D] text-center">
-        <div className="flex items-center justify-center gap-2 text-[10px] font-mono text-slate-400">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          <span>ZERO-TRUST SOC PERIMETER</span>
+      <div className="p-3 border-t border-slate-100 bg-slate-50/60 text-center">
+        <div className="flex items-center justify-center gap-2 text-[10px] font-medium text-slate-500">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span>ZERO-TRUST PERIMETER ACTIVE</span>
         </div>
       </div>
     </aside>

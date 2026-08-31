@@ -30,6 +30,8 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
+import { Card, CardContent } from '../components/ui/card.tsx';
+import { Button, LiquidButton } from '../components/ui/liquid-glass-button.tsx';
 import { api } from '../services/api.ts';
 import { AuditLog, ExamCentre, IoTDevice, Question, SecurityPolicy, SecurityPolicyItem } from '../types/index.ts';
 
@@ -41,7 +43,7 @@ interface CentresViewProps {
   onRefresh: () => void;
 }
 
-export const CentresView: React.FC<CentresViewProps> = ({ centres, onRefresh }) => {
+export const CentresView: React.FC<CentresViewProps> = ({ centres = [], onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filtered = centres.filter(
@@ -52,91 +54,78 @@ export const CentresView: React.FC<CentresViewProps> = ({ centres, onRefresh }) 
   );
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-emerald-400">
-            <MapPin className="w-3.5 h-3.5" />
-            <span>NATIONAL EXAMINATION CENTRES NETWORK (10 HUBS)</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
+            <MapPin className="w-4 h-4" />
+            <span>NATIONAL EXAMINATION CENTRES (10 HUBS)</span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight mt-1 font-heading">
+          <h1 className="text-2xl font-bold text-slate-900 font-heading mt-1">
             Exam Centres & Strongroom Readiness
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Geofenced physical centres equipped with biometric access, Faraday-shielded strongrooms, and CCTV telemetry.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Geofenced physical centres equipped with biometric access, Faraday strongrooms, and CCTV telemetry.
           </p>
         </div>
 
         <div className="relative w-72">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
             placeholder="Search by name, city, code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 pl-9 pr-3 py-2 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+            className="w-full bg-slate-50 border border-slate-300 pl-9 pr-3 py-2 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((c) => {
-          const isHighAlert = c.status === 'HIGH_ALERT';
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filtered.map((centre) => {
+          const isHighAlert = centre.status === 'HIGH_ALERT';
+
           return (
-            <div
-              key={c.id}
-              className={`bg-slate-900 border rounded-2xl p-5 shadow-lg space-y-3 transition flex flex-col justify-between ${
-                isHighAlert ? 'border-rose-700 bg-rose-950/20 shadow-rose-950/20' : 'border-slate-800 hover:border-slate-700'
-              }`}
+            <Card
+              key={centre.id}
+              className="p-5 border-slate-200 bg-white hover:border-slate-300 hover:shadow-sm transition space-y-4"
             >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-white text-sm">{c.code}</span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                      isHighAlert
-                        ? 'bg-rose-900 text-rose-200 border border-rose-700 animate-pulse'
-                        : 'bg-emerald-950 text-emerald-300 border border-emerald-600/50'
-                    }`}
-                  >
-                    {c.status}
-                  </span>
-                </div>
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                  {centre.code}
+                </span>
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    isHighAlert
+                      ? 'bg-rose-100 text-rose-800'
+                      : 'bg-emerald-100 text-emerald-800'
+                  }`}
+                >
+                  {centre.status}
+                </span>
+              </div>
 
-                <div>
-                  <h3 className="text-sm font-bold text-slate-100 font-heading">{c.name}</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">{c.address}</p>
+              <div>
+                <h3 className="text-base font-bold text-slate-900 font-heading">{centre.name}</h3>
+                <div className="text-xs text-slate-500">{centre.city} • Superintendent: {centre.superintendentName}</div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100 text-xs">
+                <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="text-[10px] text-slate-500 font-medium">Security Score</div>
+                  <div className="font-bold text-indigo-600">{centre.securityScore}%</div>
+                </div>
+                <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
+                  <div className="text-[10px] text-slate-500 font-medium">Capacity</div>
+                  <div className="font-bold text-slate-800">{centre.capacity || 2500} Students</div>
                 </div>
               </div>
 
-              <div className="space-y-2 pt-2 border-t border-slate-800 text-xs font-mono">
-                <div className="grid grid-cols-2 gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-slate-300">
-                  <div>
-                    <div className="text-[9px] text-slate-500 uppercase">Capacity</div>
-                    <div className="font-bold text-white mt-0.5">{c.capacity}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] text-slate-500 uppercase">Security Score</div>
-                    <div
-                      className={`font-bold mt-0.5 ${
-                        c.securityScore >= 90
-                          ? 'text-emerald-400'
-                          : c.securityScore >= 75
-                          ? 'text-amber-400'
-                          : 'text-rose-400'
-                      }`}
-                    >
-                      {c.securityScore}/100
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between text-[10px] text-slate-400">
-                  <span>Superintendent: {c.superintendentName}</span>
-                  <span className="text-emerald-400">Biometrics Armed</span>
-                </div>
+              <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs">
+                <span className="text-[11px] text-slate-500">Biometrics: <strong>ARMED</strong></span>
+                <span className="text-[11px] text-indigo-600 font-medium font-mono">{centre.coords.join(', ')}</span>
               </div>
-            </div>
+            </Card>
           );
         })}
       </div>
@@ -152,105 +141,82 @@ interface IotFleetViewProps {
   onRefresh: () => void;
 }
 
-export const IotFleetView: React.FC<IotFleetViewProps> = ({ devices, onRefresh }) => {
+export const IotFleetView: React.FC<IotFleetViewProps> = ({ devices = [], onRefresh }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
   const filtered = devices.filter(
     (d) =>
       d.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      d.certificateId.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (d.packageId && d.packageId.toLowerCase().includes(searchTerm.toLowerCase()))
+      d.type.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-emerald-400">
-            <Smartphone className="w-3.5 h-3.5" />
-            <span>AUTONOMOUS IOT SMART CONTAINER FLEET (30 NODES)</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-teal-600">
+            <Smartphone className="w-4 h-4" />
+            <span>HARDWARE SENSOR FLEET (30 SENTINEL NODES)</span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight mt-1 font-heading">
-            IoT Sensor Fleet & Hardware Telemetry
+          <h1 className="text-2xl font-bold text-slate-900 font-heading mt-1">
+            IoT Sensor Fleet & Telemetry Network
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Active ESP32 secure enclave hardware nodes monitoring reed switch contacts, lux exposure, kinetic shock, and thermal envelopes.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Real-time physical monitoring devices with cellular uplink, magnetic reed switches, and accelerometer sentinels.
           </p>
         </div>
 
         <div className="relative w-72">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Search device ID, seal, cert..."
+            placeholder="Search device ID or type..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 pl-9 pr-3 py-2 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-emerald-500 font-mono"
+            className="w-full bg-slate-50 border border-slate-300 pl-9 pr-3 py-2 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
           />
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filtered.map((dev) => {
-          const isCompromised = dev.status === 'COMPROMISED' || dev.sensors.reedSwitch === 'OPEN';
-          return (
-            <div
-              key={dev.id}
-              className={`p-5 rounded-2xl border shadow-lg space-y-3 transition flex flex-col justify-between ${
-                isCompromised
-                  ? 'bg-rose-950/30 border-rose-700 shadow-rose-950/20'
-                  : 'bg-slate-900 border-slate-800 hover:border-slate-700'
-              }`}
-            >
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono font-bold text-white text-sm">{dev.id}</span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold ${
-                      isCompromised
-                        ? 'bg-rose-900 text-rose-200 border border-rose-700 animate-pulse'
-                        : 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                    }`}
-                  >
-                    {dev.status}
-                  </span>
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        {filtered.map((dev) => (
+          <Card key={dev.id} className="p-5 border-slate-200 bg-white shadow-sm space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-slate-800">{dev.id}</span>
+              <span
+                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  dev.status === 'ONLINE'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : dev.status === 'WARNING' || dev.status === 'DEGRADED'
+                    ? 'bg-amber-100 text-amber-800'
+                    : 'bg-rose-100 text-rose-800'
+                }`}
+              >
+                {dev.status}
+              </span>
+            </div>
 
-                <div className="text-[11px] font-mono text-slate-400">
-                  <span>Assigned Box: </span>
-                  <span className="text-slate-200 font-bold">{dev.packageId || 'UNASSIGNED RESERVE'}</span>
-                </div>
+            <div>
+              <h4 className="text-sm font-bold text-slate-900 font-heading">{dev.type}</h4>
+              <div className="text-xs text-slate-500 truncate">Cert: {dev.certificateId || 'CERT-SEC-2027'}</div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs font-mono">
+              <div className="p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+                <div className="text-[10px] text-slate-500 font-sans">Battery</div>
+                <div className="font-bold text-emerald-600">{dev.batteryLevel}%</div>
               </div>
-
-              {/* Sensor Metrics */}
-              <div className="grid grid-cols-3 gap-2 bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center font-mono text-xs">
-                <div>
-                  <div className="text-[9px] text-slate-500 uppercase">Reed Switch</div>
-                  <div
-                    className={`font-bold mt-0.5 ${
-                      dev.sensors.reedSwitch === 'OPEN' ? 'text-rose-400' : 'text-emerald-400'
-                    }`}
-                  >
-                    {dev.sensors.reedSwitch}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[9px] text-slate-500 uppercase">Light</div>
-                  <div className="font-bold text-slate-200 mt-0.5">{dev.sensors.lightLux} Lux</div>
-                </div>
-                <div>
-                  <div className="text-[9px] text-slate-500 uppercase">Temp</div>
-                  <div className="font-bold text-slate-200 mt-0.5">{dev.sensors.temperatureCelsius}°C</div>
-                </div>
+              <div className="p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+                <div className="text-[10px] text-slate-500 font-sans">Firmware</div>
+                <div className="font-bold text-slate-800">{dev.firmwareVersion}</div>
               </div>
-
-              <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 pt-1 border-t border-slate-800">
-                <span>Battery: {dev.batteryLevel}%</span>
-                <span>FW: {dev.firmwareVersion}</span>
+              <div className="p-2 rounded-lg bg-slate-50 border border-slate-100 text-center">
+                <div className="text-[10px] text-slate-500 font-sans">Reed Switch</div>
+                <div className="font-bold text-indigo-600">{dev.sensors?.reedSwitch || 'CLOSED'}</div>
               </div>
             </div>
-          );
-        })}
+          </Card>
+        ))}
       </div>
     </div>
   );
@@ -260,94 +226,51 @@ export const IotFleetView: React.FC<IotFleetViewProps> = ({ devices, onRefresh }
 // 3. SECURITY POLICIES VIEW
 // ----------------------------------------------------
 interface SecurityPoliciesViewProps {
-  policies?: any[];
+  policies: SecurityPolicyItem[];
 }
 
 export const SecurityPoliciesView: React.FC<SecurityPoliciesViewProps> = ({ policies = [] }) => {
-  const samplePolicies = [
-    {
-      id: 'POL-001',
-      code: 'POL-TIME-WINDOW',
-      title: 'Operating Hour Access Control Policy',
-      description: 'Confidential examination papers may strictly only be accessed between 08:00 and 19:00 UTC.',
-      enforcementLayer: 'IAM & API Gateway Middleware',
-      triggerCondition: 'Access attempt outside 08:00-19:00 UTC',
-      automatedAction: 'Access Denied & High Severity Anomaly Alert Generated',
-      status: 'ENFORCED',
-    },
-    {
-      id: 'POL-002',
-      code: 'POL-GEOFENCE-CORRIDOR',
-      title: '2.0 km Armored Transit Corridor Tolerance',
-      description: 'Armored logistics carriers transporting sealed paper boxes must remain within 2.0 km of the authorized geofence corridor.',
-      enforcementLayer: 'IoT Telemetry Ingestion Daemon',
-      triggerCondition: 'Haversine distance > 2.0 km from authorized waypoints',
-      automatedAction: 'SOC Route Departure Alarm & Transit Halt Triggered',
-      status: 'ENFORCED',
-    },
-    {
-      id: 'POL-003',
-      code: 'POL-SEAL-TAMPER',
-      title: 'Instant Magnetic Reed Switch Tamper Lock',
-      description: 'Physical breach of container seals during unauthorized transit immediately triggers cryptographic lockdown.',
-      enforcementLayer: 'Embedded Hardware & Cryptographic Enclave',
-      triggerCondition: 'Reed switch == OPEN or Light > 100 Lux in transit',
-      automatedAction: 'Container Tamper Locked & Blockchain Flag Committed',
-      status: 'ENFORCED',
-    },
-    {
-      id: 'POL-004',
-      code: 'POL-MULTI-SIGNATURE',
-      title: 'Dual-Custody Two-Party Handover Protocol',
-      description: 'Handover of examination packages requires verified digital signatures from both the Dispatching Officer and Receiving Superintendent.',
-      enforcementLayer: 'Smart Contract / Blockchain Consensus',
-      triggerCondition: 'Single-party unilateral handover attempt',
-      automatedAction: 'Transaction Rejected & Non-Repudiation Alert Logged',
-      status: 'ENFORCED',
-    },
-  ];
-
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-300">
-      <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
-        <div className="flex items-center gap-2 text-xs font-mono font-semibold text-blue-400">
-          <Lock className="w-3.5 h-3.5" />
-          <span>ZERO-TRUST GOVERNANCE & AUTONOMOUS POLICY ENFORCEMENT</span>
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      <div className="border-b border-slate-200 pb-5">
+        <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600">
+          <Lock className="w-4 h-4" />
+          <span>NATIONAL EXAMINATION SECURITY POLICIES</span>
         </div>
-        <h1 className="text-xl font-bold text-white tracking-tight mt-1 font-heading">
-          Security Policies & Enforcement Rules
+        <h1 className="text-2xl font-bold text-slate-900 font-heading mt-1">
+          Security Compliance & Governance Policies
         </h1>
-        <p className="text-xs text-slate-400 mt-0.5">
-          Active security policies evaluated in real-time by edge sensor daemons, API gateways, and smart contract consensus.
+        <p className="text-xs text-slate-500 mt-0.5">
+          Standard Operating Procedures and automated system containment mandates.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {samplePolicies.map((p) => (
-          <div
-            key={p.id}
-            className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg space-y-3 flex flex-col justify-between"
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-xs font-bold text-blue-400">{p.code}</span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-800">
-                  {p.status}
-                </span>
-              </div>
-
-              <h3 className="text-sm font-bold text-white font-heading">{p.title}</h3>
-              <p className="text-xs text-slate-400 leading-relaxed font-sans">{p.description}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+        {policies.map((p) => (
+          <Card key={p.id} className="p-5 border-slate-200 bg-white shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                {p.code}
+              </span>
+              <span
+                className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                  p.status === 'ENFORCED'
+                    ? 'bg-emerald-100 text-emerald-800'
+                    : 'bg-amber-100 text-amber-800'
+                }`}
+              >
+                {p.status}
+              </span>
             </div>
 
-            <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 space-y-1.5 text-[11px] font-mono text-slate-300">
-              <div className="text-slate-500">TRIGGER: <span className="text-slate-300">{p.triggerCondition}</span></div>
-              <div className="text-slate-500">ACTION: <span className="text-amber-400">{p.automatedAction}</span></div>
-              <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-900">
-                Layer: {p.enforcementLayer}
-              </div>
+            <h4 className="text-sm font-bold text-slate-900 font-heading">{p.title}</h4>
+            <p className="text-xs text-slate-600 font-sans leading-relaxed">{p.description}</p>
+
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 font-medium">
+              <span>Trigger: <strong>{p.triggerCondition}</strong></span>
+              <span>Enforcement: <strong className="text-emerald-700">{p.enforcementLayer}</strong></span>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -361,74 +284,66 @@ interface QuestionBankViewProps {
   questions: Question[];
 }
 
-export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ questions }) => {
+export const QuestionBankView: React.FC<QuestionBankViewProps> = ({ questions = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedSubject, setSelectedSubject] = useState('ALL');
 
-  const filtered = questions.filter((q) => {
-    const matchesSearch =
+  const filtered = questions.filter(
+    (q) =>
       q.text.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.topic.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      q.id.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesSub = selectedSubject === 'ALL' || q.subject === selectedSubject;
-    return matchesSearch && matchesSub;
-  });
+      q.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      q.topic.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-purple-400">
-            <BookOpen className="w-3.5 h-3.5" />
-            <span>NATIONAL CONFIDENTIAL QUESTION BANK REPOSITORY</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-purple-600">
+            <BookOpen className="w-4 h-4" />
+            <span>CONFIDENTIAL QUESTION VAULT</span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight mt-1 font-heading">
-            Protected Question Bank & Topics
+          <h1 className="text-2xl font-bold text-slate-900 font-heading mt-1">
+            Question Bank & Topic Taxonomy
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Subject-categorized question bank with confidential tags, marks allocation, and AI duplicate detection.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Curated question items with individual cryptographic fingerprints and confidentiality tags.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
-          <select
-            value={selectedSubject}
-            onChange={(e) => setSelectedSubject(e.target.value)}
-            className="bg-slate-950 border border-slate-700 px-3 py-2 rounded-xl text-slate-200 text-xs font-mono focus:outline-none focus:border-purple-500"
-          >
-            <option value="ALL">All Subjects</option>
-            <option value="Physics">Physics</option>
-            <option value="Chemistry">Chemistry</option>
-            <option value="Mathematics">Mathematics</option>
-            <option value="Biology">Biology</option>
-          </select>
+        <div className="relative w-72">
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+          <input
+            type="text"
+            placeholder="Search questions or topics..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-300 pl-9 pr-3 py-2 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
+          />
         </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filtered.slice(0, 20).map((q) => (
-          <div
-            key={q.id}
-            className="p-5 rounded-2xl bg-slate-900 border border-slate-800 shadow-lg space-y-3 flex flex-col justify-between text-xs"
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="font-mono font-bold text-purple-400">{q.id}</span>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-purple-950 text-purple-300 border border-purple-800">
-                  {q.subject} • {q.difficulty}
-                </span>
-              </div>
-
-              <div className="font-bold text-slate-200">{q.topic}</div>
-              <p className="text-slate-300 leading-relaxed font-sans">{q.text}</p>
+        {filtered.map((q) => (
+          <Card key={q.id} className="p-5 border-slate-200 bg-white shadow-sm space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="font-mono text-xs font-bold text-purple-700 bg-purple-50 px-2 py-0.5 rounded border border-purple-200">
+                {q.id}
+              </span>
+              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
+                {q.confidentiality}
+              </span>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t border-slate-800 font-mono text-[10px] text-slate-400">
-              <span>Marks: {q.marks}</span>
-              <span className="text-amber-400 font-bold">{q.confidentiality}</span>
-              <span>Author: {q.author}</span>
+            <p className="text-xs font-medium text-slate-800 font-sans leading-relaxed">
+              {q.text}
+            </p>
+
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100 text-xs text-slate-600">
+              <div>Subject: <strong className="text-slate-900">{q.subject}</strong></div>
+              <div>Marks: <strong className="text-slate-900">{q.marks}</strong></div>
+              <div>Difficulty: <strong className="text-slate-900">{q.difficulty}</strong></div>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
     </div>
@@ -442,91 +357,84 @@ interface AuditTrailViewProps {
   auditLogs: AuditLog[];
 }
 
-export const AuditTrailView: React.FC<AuditTrailViewProps> = ({ auditLogs }) => {
+export const AuditTrailView: React.FC<AuditTrailViewProps> = ({ auditLogs = [] }) => {
   const [searchTerm, setSearchTerm] = useState('');
 
-  const filtered = auditLogs.filter((log) => {
-    const q = searchTerm.toLowerCase();
+  const filtered = auditLogs.filter((a) => {
+    const actor = a.actorName || a.userName || (a as any).actor || 'System';
+    const resource = (a as any).resource || a.resourceId || 'ALL';
     return (
-      log.action.toLowerCase().includes(q) ||
-      (log.userName && log.userName.toLowerCase().includes(q)) ||
-      (log.userRole && log.userRole.toLowerCase().includes(q)) ||
-      (log.location && log.location.toLowerCase().includes(q))
+      a.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      actor.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      resource.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
   return (
-    <div className="space-y-6 pb-12 animate-in fade-in duration-300">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-slate-900 border border-slate-800 p-6 rounded-2xl shadow-xl">
+    <div className="space-y-6 pb-12 animate-in fade-in duration-200">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-5">
         <div>
-          <div className="flex items-center gap-2 text-xs font-mono font-semibold text-blue-400">
-            <FileText className="w-3.5 h-3.5" />
-            <span>SOVEREIGN IMMUTABLE SECURITY AUDIT TRAIL</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-indigo-600">
+            <FileText className="w-4 h-4" />
+            <span>IMMUTABLE AUDIT TRAIL</span>
           </div>
-          <h1 className="text-xl font-bold text-white tracking-tight mt-1 font-heading">
-            Audit Logs & Historical Evidence
+          <h1 className="text-2xl font-bold text-slate-900 font-heading mt-1">
+            System Operations & Governance Audit
           </h1>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Every authentication, paper approval, seal application, and corridor alert generates a non-repudiable audit event.
+          <p className="text-xs text-slate-500 mt-0.5">
+            Every authorization, paper dispatch, and sensor alarm logged with non-repudiation timestamps.
           </p>
         </div>
 
         <div className="relative w-72">
-          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-500" />
+          <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
           <input
             type="text"
-            placeholder="Search audit trail..."
+            placeholder="Search action, actor, resource..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-700 pl-9 pr-3 py-2 rounded-xl text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+            className="w-full bg-slate-50 border border-slate-300 pl-9 pr-3 py-2 rounded-xl text-xs text-slate-900 focus:outline-none focus:border-indigo-500"
           />
         </div>
       </div>
 
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs border-collapse font-sans">
-            <thead>
-              <tr className="border-b border-slate-800 bg-slate-950/80 font-mono text-[10px] text-slate-400 uppercase">
-                <th className="p-3.5">Timestamp</th>
-                <th className="p-3.5">Actor & Role</th>
-                <th className="p-3.5">Action Event</th>
-                <th className="p-3.5">Location / IP</th>
-                <th className="p-3.5 text-right">Status</th>
+      <Card className="p-5 border-slate-200 bg-white shadow-sm overflow-x-auto">
+        <table className="w-full text-left text-xs">
+          <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
+            <tr>
+              <th className="py-2.5 px-3">TIMESTAMP</th>
+              <th className="py-2.5 px-3">ACTOR</th>
+              <th className="py-2.5 px-3">ACTION</th>
+              <th className="py-2.5 px-3">RESOURCE</th>
+              <th className="py-2.5 px-3">DETAILS</th>
+              <th className="py-2.5 px-3">VERIFICATION</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {filtered.map((log) => (
+              <tr key={log.id} className="hover:bg-slate-50/80 transition">
+                <td className="py-3 px-3 font-mono text-slate-500 text-[11px]">
+                  {new Date(log.timestamp).toLocaleTimeString()}
+                </td>
+                <td className="py-3 px-3">
+                  <div className="font-bold text-slate-900">{log.actorName || log.userName || (log as any).actor || 'System'}</div>
+                  <div className="text-[10px] text-slate-500 font-mono">{log.actorRole || log.userRole || 'OFFICER'}</div>
+                </td>
+                <td className="py-3 px-3 font-mono font-bold text-indigo-700">{log.action}</td>
+                <td className="py-3 px-3 font-mono text-slate-700">{(log as any).resource || log.resourceId || 'ALL'}</td>
+                <td className="py-3 px-3 text-slate-600 max-w-xs truncate">
+                  {typeof log.details === 'string' ? log.details : JSON.stringify(log.details || '')}
+                </td>
+                <td className="py-3 px-3">
+                  <span className="px-2 py-0.5 rounded text-[10px] font-mono font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                    VERIFIED
+                  </span>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-800">
-              {filtered.slice(0, 40).map((log) => (
-                <tr key={log.id} className="hover:bg-slate-800/50 transition">
-                  <td className="p-3.5 font-mono text-slate-400 text-[11px]">
-                    {new Date(log.timestamp).toLocaleString()}
-                  </td>
-                  <td className="p-3.5">
-                    <div className="font-bold text-slate-200">{log.userName || log.actorName || 'System'}</div>
-                    <div className="text-[10px] font-mono text-slate-400">{log.userRole || log.actorRole}</div>
-                  </td>
-                  <td className="p-3.5 font-mono text-slate-300 font-bold">{log.action}</td>
-                  <td className="p-3.5 text-slate-400 text-[11px]">
-                    <div>{log.location || 'Command HQ'}</div>
-                    <div className="text-[10px] font-mono text-slate-500">{log.ipAddress}</div>
-                  </td>
-                  <td className="p-3.5 text-right font-mono">
-                    <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        log.status === 'DENIED' || log.status === 'FLAGGED'
-                          ? 'bg-rose-950 text-rose-300 border border-rose-800'
-                          : 'bg-emerald-950 text-emerald-300 border border-emerald-800'
-                      }`}
-                    >
-                      {log.status || 'SUCCESS'}
-                    </span>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            ))}
+          </tbody>
+        </table>
+      </Card>
     </div>
   );
 };

@@ -25,6 +25,7 @@ import {
   User,
   UserRiskProfile,
 } from './types/index.ts';
+import { AdminPanelView } from './views/AdminPanelView.tsx';
 import { AlertsView } from './views/AlertsView.tsx';
 import { BlockchainView } from './views/BlockchainView.tsx';
 import { CustodyView } from './views/CustodyView.tsx';
@@ -200,8 +201,8 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-[#07090D] text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white relative">
-      {/* Top Editorial Navbar */}
+    <div className="min-h-screen bg-[#F8FAFC] text-slate-900 flex flex-col font-sans selection:bg-indigo-600 selection:text-white relative">
+      {/* Top Enterprise Navbar */}
       <Navbar
         currentUser={currentUser}
         availableUsers={availableUsers}
@@ -229,12 +230,12 @@ export default function App() {
         />
 
         {/* Dynamic View Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#0B0F14]/60 backdrop-blur-sm scrollbar-thin">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 bg-[#F8FAFC] scrollbar-thin">
           {isLoading && !metrics ? (
             <div className="h-96 flex flex-col items-center justify-center space-y-4">
-              <div className="w-10 h-10 rounded-full border-4 border-cyan-500/20 border-t-cyan-400 animate-spin" />
-              <div className="text-xs font-mono text-cyan-400">
-                BOOTING ZERO-TRUST EXAMSHIELD PLATFORM & VERIFYING LEDGER...
+              <div className="w-10 h-10 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin" />
+              <div className="text-xs font-semibold text-indigo-600 tracking-wide">
+                BOOTING EXAMSHIELD ZERO-TRUST PLATFORM & VERIFYING LEDGER...
               </div>
             </div>
           ) : (
@@ -249,6 +250,19 @@ export default function App() {
                   centres={centres}
                   currentUser={currentUser}
                   onNavigateToView={setCurrentView}
+                  onRefresh={handleRefresh}
+                />
+              )}
+
+              {currentView === 'admin' && (
+                <AdminPanelView
+                  currentUser={currentUser}
+                  availableUsers={availableUsers}
+                  centres={centres}
+                  devices={devices}
+                  policies={policies}
+                  auditLogs={auditLogs}
+                  metrics={metrics}
                   onRefresh={handleRefresh}
                 />
               )}

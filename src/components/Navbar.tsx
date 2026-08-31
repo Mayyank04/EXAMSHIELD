@@ -1,88 +1,83 @@
 import React, { useEffect, useState } from 'react';
 import {
-  Activity,
-  AlertTriangle,
   Bell,
   CheckCircle2,
+  ChevronDown,
   Clock,
   Command,
-  Cpu,
   Flame,
   Globe,
+  HardDrive,
   KeyRound,
+  Layers,
   Lock,
   LogOut,
-  Radio,
   RefreshCw,
-  RotateCcw,
   Search,
+  Server,
   Shield,
   ShieldAlert,
   ShieldCheck,
+  Smartphone,
   Sparkles,
+  Truck,
   UserCheck,
+  User as UserIcon,
+  Users,
   Zap,
 } from 'lucide-react';
 import { ROLE_METADATA } from '../services/authService.ts';
-import { ProviderManager } from '../services/providers/index.ts';
-import { SystemStats, User } from '../types/index.ts';
+import { SystemStats, User, UserRole } from '../types/index.ts';
 
 interface NavbarProps {
   currentUser: User;
-  availableUsers?: User[];
-  onSelectUser?: (user: User) => void;
+  availableUsers: User[];
+  onSelectUser: (user: User) => void;
   onOpenAuthModal: () => void;
   onOpenCommandPalette: () => void;
   onOpenNotifications: () => void;
   onNavigateToView: (view: string) => void;
-  stats?: SystemStats | null;
-  activeAlertsCount?: number;
-  onResetDemo?: () => void;
-  onRefresh?: () => void;
+  stats: SystemStats | null;
+  activeAlertsCount: number;
+  onResetDemo: () => void;
+  onRefresh: () => void;
   isRefreshing?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
   currentUser,
-  availableUsers = [],
+  availableUsers,
   onSelectUser,
   onOpenAuthModal,
   onOpenCommandPalette,
   onOpenNotifications,
   onNavigateToView,
   stats,
-  activeAlertsCount = 0,
+  activeAlertsCount,
   onResetDemo,
   onRefresh,
   isRefreshing = false,
 }) => {
-  const [timeStr, setTimeStr] = useState<string>('');
-  const [isProdMode, setIsProdMode] = useState<boolean>(ProviderManager.isProduction());
+  const [time, setTime] = useState({
+    utc: new Date().toUTCString().slice(17, 25) + ' UTC',
+    local: new Date().toLocaleTimeString(),
+  });
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
-    const updateClock = () => {
-      const now = new Date();
-      const utc = now.toUTCString().slice(17, 22) + ' UTC';
-      const local = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setTimeStr(`${local} • ${utc}`);
-    };
-
-    updateClock();
-    const interval = setInterval(updateClock, 1000);
-    return () => clearInterval(interval);
+    const timer = setInterval(() => {
+      const d = new Date();
+      setTime({
+        utc: d.toUTCString().slice(17, 25) + ' UTC',
+        local: d.toLocaleTimeString(),
+      });
+    }, 1000);
+    return () => clearInterval(timer);
   }, []);
 
-  const handleToggleMode = () => {
-    const next = !isProdMode;
-    setIsProdMode(next);
-    ProviderManager.setProductionMode(next);
-    if (onRefresh) onRefresh();
-  };
-
-  const handleReset = async () => {
-    if (!onResetDemo) return;
-    if (confirm('Reset entire demonstration database, ledger blocks, and telemetry to pristine baseline?')) {
+  const handleResetClick = async () => {
+    if (window.confirm('Reset system to baseline demonstration state? All synthetic logs will be reinitialized.')) {
       setIsResetting(true);
       try {
         await onResetDemo();
@@ -95,27 +90,27 @@ export const Navbar: React.FC<NavbarProps> = ({
   const roleMeta = ROLE_METADATA[currentUser.role] || ROLE_METADATA.SUPER_ADMIN;
 
   return (
-    <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-xl sticky top-0 z-40 select-none shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
+    <header className="h-16 px-4 md:px-6 flex items-center justify-between border-b border-slate-200 bg-white sticky top-0 z-40 select-none shadow-xs">
       {/* Left: Brand Identity */}
       <div className="flex items-center gap-4">
         <button
           onClick={() => onNavigateToView('welcome')}
           className="flex items-center gap-2.5 group focus:outline-none cursor-pointer"
         >
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-cyan-500 via-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-[0_0_15px_rgba(0,217,255,0.35)] group-hover:scale-105 transition-transform duration-200">
+          <div className="w-8 h-8 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-sm transition-transform duration-150 group-hover:scale-105">
             <Shield className="w-4 h-4" />
           </div>
           <div className="flex flex-col text-left">
             <div className="flex items-center gap-1.5">
-              <span className="text-base font-extrabold tracking-tight text-white font-heading">
-                EXAM<span className="text-cyan-400">SHIELD</span>
+              <span className="text-base font-extrabold tracking-tight text-slate-900 font-heading">
+                EXAM<span className="text-indigo-600">SHIELD</span>
               </span>
-              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">
+              <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
                 v2.4
               </span>
             </div>
-            <span className="text-[10px] text-slate-400 font-mono tracking-tight hidden sm:inline">
-              National Examination Paper Security Platform
+            <span className="text-[10px] text-slate-500 font-medium tracking-tight hidden sm:inline">
+              National Examination Security Platform
             </span>
           </div>
         </button>
@@ -123,11 +118,11 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Global Search Trigger */}
         <button
           onClick={onOpenCommandPalette}
-          className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-900/80 border border-slate-800 text-slate-400 hover:text-slate-100 hover:border-cyan-500/40 transition-all duration-200 text-xs font-sans w-64 shadow-inner cursor-pointer"
+          className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-xl bg-slate-50 border border-slate-200 text-slate-500 hover:text-slate-900 hover:border-slate-300 transition-all text-xs font-sans w-64 shadow-2xs cursor-pointer"
         >
-          <Search className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-          <span className="flex-1 text-left text-xs">Search or jump to...</span>
-          <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-slate-950 border border-slate-800 rounded">
+          <Search className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+          <span className="flex-1 text-left text-xs font-medium">Search or jump to...</span>
+          <kbd className="px-1.5 py-0.5 text-[10px] font-mono text-slate-500 bg-white border border-slate-200 rounded shadow-2xs">
             ⌘K
           </kbd>
         </button>
@@ -136,76 +131,119 @@ export const Navbar: React.FC<NavbarProps> = ({
       {/* Right: Actions, Live Clock & User Status */}
       <div className="flex items-center gap-3 sm:gap-4">
         {/* Live Clock */}
-        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-900/60 border border-slate-800 text-[11px] font-mono text-slate-400">
-          <Clock className="w-3.5 h-3.5 text-cyan-500" />
-          <span>{timeStr}</span>
+        <div className="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-xl bg-slate-50 border border-slate-200 text-[11px] font-medium text-slate-600">
+          <Clock className="w-3.5 h-3.5 text-indigo-600" />
+          <span>{time.local}</span>
+          <span className="text-slate-300">•</span>
+          <span className="text-slate-400 font-mono text-[10px]">{time.utc}</span>
         </div>
 
-        {/* Mode Toggle Button */}
+        {/* System Status Pill */}
+        <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-semibold">
+          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span>All systems operational</span>
+        </div>
+
+        {/* Demo Mode Button */}
         <button
-          onClick={handleToggleMode}
-          title="Click to toggle Demo vs Production API mode"
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-[11px] font-mono font-semibold transition cursor-pointer ${
-            isProdMode
-              ? 'bg-emerald-950/60 border-emerald-500/50 text-emerald-300 shadow-[0_0_10px_rgba(52,211,153,0.2)]'
-              : 'bg-amber-950/40 border-amber-500/40 text-amber-300 shadow-[0_0_10px_rgba(245,158,11,0.15)]'
-          }`}
+          onClick={() => onNavigateToView('demo')}
+          className="hidden xl:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-purple-50 hover:bg-purple-100 border border-purple-200 text-purple-700 text-xs font-semibold transition cursor-pointer"
         >
-          <span
-            className={`w-1.5 h-1.5 rounded-full ${
-              isProdMode ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
-            }`}
-          />
-          <span className="hidden sm:inline">MODE:</span>
-          <span>{isProdMode ? 'PRODUCTION' : 'DEMO MODE'}</span>
+          <Zap className="w-3.5 h-3.5 text-purple-600" />
+          <span>Demo Tour</span>
         </button>
 
-        {/* Quick Demo Reset */}
+        {/* Reset System Baseline */}
         <button
-          onClick={handleReset}
+          onClick={handleResetClick}
           disabled={isResetting}
-          title="Reset demonstration data to baseline"
-          className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent hover:border-slate-700 transition cursor-pointer"
+          title="Reset System Baseline"
+          className="p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
         >
-          <RotateCcw className={`w-4 h-4 ${isResetting ? 'animate-spin text-cyan-400' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${isRefreshing || isResetting ? 'animate-spin text-indigo-600' : ''}`} />
         </button>
 
-        {/* Notifications Bell */}
+        {/* Notifications Trigger */}
         <button
           onClick={onOpenNotifications}
-          className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 border border-transparent hover:border-slate-700 transition cursor-pointer"
-          title="Security Notifications"
+          className="relative p-2 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-xl transition cursor-pointer"
         >
           <Bell className="w-4 h-4" />
           {activeAlertsCount > 0 && (
-            <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-mono font-bold flex items-center justify-center shadow-lg shadow-rose-600/50">
-              {activeAlertsCount > 9 ? '9+' : activeAlertsCount}
-            </span>
+            <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
           )}
         </button>
 
-        {/* Active Role & User Capsule */}
-        <button
-          onClick={onOpenAuthModal}
-          className="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-xl bg-slate-900/80 hover:bg-slate-800/90 border border-slate-800 hover:border-cyan-500/40 transition group text-left cursor-pointer shadow-inner"
-        >
-          <div className="w-7 h-7 rounded-lg bg-slate-950 flex items-center justify-center text-cyan-400 font-bold font-mono text-xs border border-slate-800 group-hover:border-cyan-500/50 shadow-sm">
-            {currentUser.name.slice(0, 2).toUpperCase()}
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-1.5">
-              <span className="text-xs font-semibold text-slate-200 group-hover:text-white truncate max-w-[120px]">
-                {currentUser.name.split(' ')[0]}
+        {/* Profile Switcher Menu */}
+        <div className="relative">
+          <button
+            onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+            className="flex items-center gap-2 p-1.5 pr-2 rounded-xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition cursor-pointer text-left"
+          >
+            <div className="w-7 h-7 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-xs font-mono">
+              {currentUser.name.split(' ').map((n) => n[0]).slice(0, 2).join('')}
+            </div>
+            <div className="hidden md:flex flex-col">
+              <span className="text-xs font-bold text-slate-900 leading-tight truncate max-w-[120px]">
+                {currentUser.name}
               </span>
-              <span className="text-[9px] font-mono px-1.5 py-0.2 rounded bg-slate-950 text-cyan-300 border border-slate-800">
+              <span className="text-[10px] text-indigo-600 font-semibold font-mono">
                 {currentUser.role}
               </span>
             </div>
-            <span className="text-[10px] text-slate-400 font-mono hidden md:inline truncate max-w-[140px]">
-              {roleMeta.badge}
-            </span>
-          </div>
-        </button>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+          </button>
+
+          {isUserDropdownOpen && (
+            <div
+              className="absolute right-0 mt-2 w-64 rounded-2xl bg-white border border-slate-200 shadow-lg p-2 z-50 animate-in fade-in zoom-in-95 duration-100 space-y-1"
+              onMouseLeave={() => setIsUserDropdownOpen(false)}
+            >
+              <div className="p-2 border-b border-slate-100">
+                <div className="text-xs font-bold text-slate-900">{currentUser.name}</div>
+                <div className="text-[11px] text-slate-500 font-mono truncate">{currentUser.email}</div>
+                <div className="text-[10px] text-indigo-600 font-semibold mt-1">
+                  Badge: {currentUser.badgeNumber}
+                </div>
+              </div>
+
+              <div className="text-[10px] font-semibold text-slate-400 uppercase px-2 pt-2">
+                Simulate Role Identity:
+              </div>
+
+              {availableUsers.slice(0, 5).map((u) => (
+                <button
+                  key={u.id}
+                  onClick={() => {
+                    onSelectUser(u);
+                    setIsUserDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs flex items-center justify-between transition cursor-pointer ${
+                    u.id === currentUser.id
+                      ? 'bg-indigo-50 text-indigo-700 font-bold'
+                      : 'hover:bg-slate-50 text-slate-700'
+                  }`}
+                >
+                  <span className="truncate">{u.name}</span>
+                  <span className="text-[10px] font-mono text-slate-500">{u.role.split('_')[0]}</span>
+                </button>
+              ))}
+
+              <div className="pt-1 border-t border-slate-100">
+                <button
+                  onClick={() => {
+                    onNavigateToView('admin');
+                    setIsUserDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs text-indigo-600 hover:bg-indigo-50 font-semibold flex items-center gap-2 cursor-pointer"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Open Admin Panel</span>
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
