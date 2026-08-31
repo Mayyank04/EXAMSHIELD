@@ -21,6 +21,7 @@ import {
   Smartphone,
   Sparkles,
   Truck,
+  Users,
   Zap,
 } from 'lucide-react';
 import { UserRole } from '../types/index.ts';
@@ -113,10 +114,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
     {
       title: 'ADMINISTRATION',
       items: [
-        { id: 'admin', label: 'Admin Panel', icon: ShieldCheck },
+        { id: 'admin', label: 'Security Center', icon: ShieldCheck },
+        { id: 'users', label: 'Users & Roles', icon: Users },
+        { id: 'audit', label: 'Audit Logs', icon: FileText },
         { id: 'policies', label: 'Security Policies', icon: Lock },
         { id: 'blockchain', label: 'Immutable Ledger', icon: Layers },
-        { id: 'audit', label: 'Audit Logs', icon: FileText },
       ],
     },
     {

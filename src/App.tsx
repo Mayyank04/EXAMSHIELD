@@ -253,7 +253,7 @@ export default function App() {
                 />
               )}
 
-              {currentView === 'admin' && (
+              {(currentView === 'admin' || currentView === 'users') && (
                 <AdminPanelView
                   currentUser={currentUser}
                   availableUsers={availableUsers}
@@ -263,6 +263,7 @@ export default function App() {
                   auditLogs={auditLogs}
                   metrics={metrics}
                   onRefresh={handleRefresh}
+                  onNavigateToIncidents={() => setCurrentView('incidents')}
                 />
               )}
 

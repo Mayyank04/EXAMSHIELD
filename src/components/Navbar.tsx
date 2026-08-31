@@ -26,6 +26,7 @@ import {
   Users,
   Zap,
 } from 'lucide-react';
+import { MfaSetupModal } from './MfaSetupModal.tsx';
 import { ROLE_METADATA } from '../services/authService.ts';
 import { SystemStats, User, UserRole } from '../types/index.ts';
 
@@ -63,6 +64,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     local: new Date().toLocaleTimeString(),
   });
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
+  const [isMfaModalOpen, setIsMfaModalOpen] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
 
   useEffect(() => {
@@ -229,7 +231,29 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               ))}
 
-              <div className="pt-1 border-t border-slate-100">
+              <div className="pt-1 border-t border-slate-100 space-y-0.5">
+                <button
+                  onClick={() => {
+                    setIsMfaModalOpen(true);
+                    setIsUserDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs text-slate-700 hover:bg-slate-50 font-medium flex items-center gap-2 cursor-pointer"
+                >
+                  <Smartphone className="w-3.5 h-3.5 text-indigo-600" />
+                  <span>Configure MFA & Passkeys</span>
+                </button>
+
+                <button
+                  onClick={() => {
+                    onOpenAuthModal();
+                    setIsUserDropdownOpen(false);
+                  }}
+                  className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs text-slate-700 hover:bg-slate-50 font-medium flex items-center gap-2 cursor-pointer"
+                >
+                  <Lock className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Re-Authenticate Session</span>
+                </button>
+
                 <button
                   onClick={() => {
                     onNavigateToView('admin');
@@ -238,13 +262,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                   className="w-full text-left px-2.5 py-1.5 rounded-lg text-xs text-indigo-600 hover:bg-indigo-50 font-semibold flex items-center gap-2 cursor-pointer"
                 >
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Open Admin Panel</span>
+                  <span>Security Command Center</span>
                 </button>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* MFA Setup Dialog */}
+      <MfaSetupModal
+        isOpen={isMfaModalOpen}
+        onClose={() => setIsMfaModalOpen(false)}
+        currentUser={currentUser}
+        onMfaEnabled={(updatedUser) => {
+          onSelectUser(updatedUser);
+        }}
+      />
     </header>
   );
 };

@@ -18,6 +18,16 @@ const DEFAULT_PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3001;
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
+// Security Headers Middleware (FIPS / OWASP Baseline)
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  res.setHeader('Permissions-Policy', 'camera=*, geolocation=*');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  next();
+});
+
 // Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();

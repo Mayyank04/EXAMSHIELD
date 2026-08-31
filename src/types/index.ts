@@ -1,17 +1,33 @@
 export type UserRole =
   | 'SUPER_ADMIN'
-  | 'EXAM_AUTHORITY'
+  | 'SECURITY_ADMIN'
+  | 'EXAM_CONTROLLER'
   | 'SECURITY_OFFICER'
-  | 'TRANSPORT_OFFICER'
   | 'INVESTIGATOR'
-  | 'CENTRE_SUPERINTENDENT'
   | 'AUDITOR'
+  | 'OPERATOR'
+  | 'VIEWER'
+  | 'EXAM_AUTHORITY'
+  | 'TRANSPORT_OFFICER'
+  | 'CENTRE_SUPERINTENDENT'
   | 'VIEW_ONLY'
   | 'PAPER_MANAGER'
   | 'PRINTING_OFFICER'
   | 'STORAGE_OFFICER';
 
 export type Permission =
+  | 'manage_users'
+  | 'manage_roles'
+  | 'manage_policies'
+  | 'manage_mfa'
+  | 'view_audit_logs'
+  | 'manage_incidents'
+  | 'author_papers'
+  | 'verify_papers'
+  | 'manage_logistics'
+  | 'execute_handover'
+  | 'emergency_lockdown'
+  | 'break_glass'
   | 'paper:create'
   | 'paper:read'
   | 'paper:approve'
@@ -29,6 +45,71 @@ export type Permission =
   | 'audit:read'
   | 'simulation:run'
   | 'admin:manage';
+
+export interface ActiveSession {
+  id: string;
+  userId: string;
+  userName: string;
+  role: UserRole;
+  device: string;
+  browser: string;
+  os: string;
+  ipAddress: string;
+  location: string;
+  loginTime: string;
+  lastActive: string;
+  isCurrentSession: boolean;
+  status: 'ACTIVE' | 'EXPIRED' | 'REVOKED';
+}
+
+export interface SecurityHealthCheck {
+  id: string;
+  name: string;
+  category: 'AUTHENTICATION' | 'INFRASTRUCTURE' | 'GOVERNANCE' | 'INCIDENT_RESPONSE';
+  status: 'PASS' | 'WARN' | 'FAIL';
+  score: number;
+  description: string;
+  details?: string;
+  fixAction?: string;
+}
+
+export interface SecurityHealthPosture {
+  overallScore: number;
+  rating: 'EXCELLENT' | 'GOOD' | 'NEEDS_ATTENTION' | 'CRITICAL';
+  mfaCoveragePercent: number;
+  strongPasswordPercent: number;
+  activeSessionsCount: number;
+  suspiciousLoginsCount: number;
+  openIncidentsCount: number;
+  checks: SecurityHealthCheck[];
+}
+
+export interface SecurityAlertItem {
+  id: string;
+  timestamp: string;
+  severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  title: string;
+  description: string;
+  category: 'AUTHENTICATION' | 'ROLE_MODIFICATION' | 'MFA' | 'DEVICE' | 'POLICY' | 'TAMPER';
+  actor: string;
+  relatedUser?: string;
+  status: 'OPEN' | 'INVESTIGATING' | 'ACKNOWLEDGED' | 'RESOLVED';
+  incidentId?: string;
+}
+
+export interface BackupCodeItem {
+  code: string;
+  used: boolean;
+  usedAt?: string;
+}
+
+export interface EmergencyLockdownState {
+  isActive: boolean;
+  reason?: string;
+  startedAt?: string;
+  startedBy?: string;
+  affectedModules: string[];
+}
 
 export type PaperStatus =
   | 'DRAFT'
