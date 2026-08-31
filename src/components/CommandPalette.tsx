@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import {
   Activity,
   AlertOctagon,
+  BookOpen,
   Boxes,
   BrainCircuit,
   CheckCircle2,
@@ -10,7 +11,6 @@ import {
   FileText,
   Fingerprint,
   Flame,
-  Globe,
   KeyRound,
   Layers,
   Lock,
@@ -26,7 +26,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
-import { ExamCentre, Incident, Package, Paper, User } from '../types/index.ts';
+import { ExamCentre, Incident, Package, Paper, Question, User } from '../types/index.ts';
 
 interface CommandPaletteProps {
   isOpen: boolean;
@@ -37,6 +37,7 @@ interface CommandPaletteProps {
   incidents: Incident[];
   centres: ExamCentre[];
   users: User[];
+  questions?: Question[];
   onSelectPaper?: (paper: Paper) => void;
   onSelectPackage?: (pkg: Package) => void;
 }
@@ -45,11 +46,12 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   isOpen,
   onClose,
   onNavigate,
-  papers,
-  packages,
-  incidents,
-  centres,
-  users,
+  papers = [],
+  packages = [],
+  incidents = [],
+  centres = [],
+  users = [],
+  questions = [],
 }) => {
   const [query, setQuery] = useState('');
 
@@ -58,7 +60,7 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         if (isOpen) onClose();
-        else onClose(); // parent handles toggle
+        else onClose();
       }
       if (e.key === 'Escape' && isOpen) {
         onClose();
@@ -72,40 +74,82 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
 
   const q = query.toLowerCase().trim();
 
-  // Quick Action Shortcuts
+  // Quick Action Shortcuts (3D Security Vault removed)
   const quickActions = [
-    { id: 'act-dash', title: 'Go to Command Center', icon: Activity, view: 'dashboard', category: 'Navigation' },
-    { id: 'act-papers', title: 'Generate & Sign Question Paper', icon: FileCheck2, view: 'papers', category: 'Action' },
-    { id: 'act-verify', title: 'Verify Cryptographic SHA-256 Hash', icon: Fingerprint, view: 'verification', category: 'Action' },
-    { id: 'act-transport', title: 'View Armored Transport Mesh Radar', icon: Truck, view: 'transport', category: 'Navigation' },
-    { id: 'act-handover', title: 'Execute Two-Party Custodial Handover', icon: KeyRound, view: 'handover', category: 'Action' },
-    { id: 'act-vault', title: 'Open 3D Security Vault Network', icon: Shield, view: 'vault3d', category: '3D Visuals' },
-    { id: 'act-attack', title: 'Open Security Attack Simulation Lab', icon: Flame, view: 'simulator', category: 'Simulation' },
-    { id: 'act-demo', title: 'Start Master 10-Step Demo Tour', icon: Zap, view: 'demo', category: 'Demo' },
-    { id: 'act-insider', title: 'Run AI Insider Threat Behavioral Analysis', icon: BrainCircuit, view: 'insider', category: 'AI Security' },
-    { id: 'act-leak', title: 'Scan Suspected Exam Paper Leak', icon: ShieldAlert, view: 'leak', category: 'AI Security' },
-    { id: 'act-blockchain', title: 'Explore Immutable Merkle Block Ledger', icon: Layers, view: 'blockchain', category: 'Audit' },
-    { id: 'act-health', title: 'View API & System Health Center', icon: Cpu, view: 'health', category: 'System' },
+    { id: 'act-dash', title: 'Command Center Dashboard', icon: Activity, view: 'dashboard', category: 'Navigation' },
+    { id: 'act-papers', title: 'Question Papers & Verification', icon: FileCheck2, view: 'papers', category: 'Module' },
+    { id: 'act-qbank', title: 'Question Bank & Taxonomy', icon: BookOpen, view: 'questions', category: 'Module' },
+    { id: 'act-verify', title: 'Cryptographic SHA-256 Verification', icon: Fingerprint, view: 'verification', category: 'Action' },
+    { id: 'act-transport', title: 'Armored Transit Radar', icon: Truck, view: 'transport', category: 'Logistics' },
+    { id: 'act-packages', title: 'Smart Exam Boxes', icon: Boxes, view: 'packages', category: 'Logistics' },
+    { id: 'act-handover', title: 'Two-Party Custodial Handover', icon: KeyRound, view: 'handover', category: 'Action' },
+    { id: 'act-custody', title: 'Chain of Custody Timeline', icon: Layers, view: 'custody', category: 'Audit' },
+    { id: 'act-insider', title: 'AI Insider Threat Behavioral Engine', icon: BrainCircuit, view: 'insider', category: 'Threat' },
+    { id: 'act-leak', title: 'Paper Leak Semantic Similarity Radar', icon: ShieldAlert, view: 'leak', category: 'Threat' },
+    { id: 'act-admin', title: 'Sovereign Admin Panel', icon: ShieldCheck, view: 'admin', category: 'Admin' },
+    { id: 'act-blockchain', title: 'Immutable Merkle Block Ledger', icon: Layers, view: 'blockchain', category: 'Audit' },
+    { id: 'act-simulator', title: 'Attack Simulation Lab', icon: Flame, view: 'simulator', category: 'Simulation' },
+    { id: 'act-demo', title: '10-Step Master Demo Tour', icon: Zap, view: 'demo', category: 'Demo' },
+    { id: 'act-health', title: 'System Health & Telemetry', icon: Cpu, view: 'health', category: 'System' },
   ].filter((a) => !q || a.title.toLowerCase().includes(q) || a.category.toLowerCase().includes(q));
 
   // Filtered Papers
   const matchedPapers = papers
-    .filter((p) => p.paperCode.toLowerCase().includes(q) || p.subject.toLowerCase().includes(q) || p.id.toLowerCase().includes(q))
+    .filter(
+      (p) =>
+        p.paperCode.toLowerCase().includes(q) ||
+        p.subject.toLowerCase().includes(q) ||
+        p.id.toLowerCase().includes(q)
+    )
     .slice(0, 4);
+
+  // Filtered Questions
+  const matchedQuestions = questions
+    .filter(
+      (qn) =>
+        qn.text.toLowerCase().includes(q) ||
+        qn.subject.toLowerCase().includes(q) ||
+        qn.topic.toLowerCase().includes(q) ||
+        qn.id.toLowerCase().includes(q)
+    )
+    .slice(0, 3);
 
   // Filtered Packages
   const matchedPackages = packages
-    .filter((pkg) => pkg.packageCode.toLowerCase().includes(q) || pkg.destinationCentreName.toLowerCase().includes(q))
+    .filter(
+      (pkg) =>
+        pkg.packageCode.toLowerCase().includes(q) ||
+        pkg.destinationCentreName.toLowerCase().includes(q)
+    )
     .slice(0, 3);
 
   // Filtered Incidents
   const matchedIncidents = incidents
-    .filter((i) => i.title.toLowerCase().includes(q) || i.incidentCode.toLowerCase().includes(q))
+    .filter(
+      (i) =>
+        i.title.toLowerCase().includes(q) ||
+        i.incidentCode.toLowerCase().includes(q)
+    )
     .slice(0, 3);
 
   // Filtered Centres
   const matchedCentres = centres
-    .filter((c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.city.toLowerCase().includes(q))
+    .filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        c.code.toLowerCase().includes(q) ||
+        c.city.toLowerCase().includes(q)
+    )
+    .slice(0, 3);
+
+  // Filtered Users
+  const matchedUsers = users
+    .filter(
+      (u) =>
+        u.name.toLowerCase().includes(q) ||
+        u.email.toLowerCase().includes(q) ||
+        u.role.toLowerCase().includes(q)
+    )
     .slice(0, 3);
 
   const handleSelect = (view: string) => {
@@ -114,26 +158,29 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-black/70 backdrop-blur-md animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-900/50 backdrop-blur-sm animate-in fade-in duration-150">
       <div
-        className="w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
+        className="w-full max-w-2xl bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}
-        <div className="p-4 border-b border-slate-800 flex items-center gap-3 bg-slate-950/60">
-          <Search className="w-5 h-5 text-sky-400 shrink-0" />
+        <div className="p-4 border-b border-slate-200 flex items-center gap-3 bg-slate-50/70">
+          <Search className="w-5 h-5 text-indigo-600 shrink-0" />
           <input
             type="text"
             autoFocus
-            placeholder="Type a command, paper code, shipment, incident, or node..."
+            placeholder="Search papers, question bank, containers, incidents, users, centres..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="flex-1 bg-transparent text-sm text-slate-100 placeholder-slate-500 focus:outline-none font-sans"
+            className="flex-1 bg-transparent text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none font-sans"
           />
-          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono font-medium text-slate-400 bg-slate-800 border border-slate-700 rounded">
+          <kbd className="hidden sm:inline-block px-2 py-0.5 text-[10px] font-mono font-medium text-slate-500 bg-white border border-slate-200 rounded">
             ESC to close
           </kbd>
-          <button onClick={onClose} className="p-1 text-slate-400 hover:text-white rounded">
+          <button
+            onClick={onClose}
+            className="p-1 text-slate-400 hover:text-slate-700 rounded-lg cursor-pointer"
+          >
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -146,24 +193,20 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
               <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 py-1 font-semibold">
                 Quick Actions & Navigation
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {quickActions.map((action) => {
                   const Icon = action.icon;
                   return (
                     <button
                       key={action.id}
                       onClick={() => handleSelect(action.view)}
-                      className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-800/80 text-left transition group"
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-slate-700 hover:text-slate-900 hover:bg-slate-50 transition cursor-pointer text-left group"
                     >
-                      <div className="flex items-center gap-3">
-                        <div className="w-7 h-7 rounded-lg bg-slate-800 flex items-center justify-center text-sky-400 group-hover:bg-sky-500/20">
-                          <Icon className="w-4 h-4" />
-                        </div>
-                        <span className="font-medium text-slate-200 group-hover:text-white">{action.title}</span>
+                      <div className="flex items-center gap-2.5">
+                        <Icon className="w-4 h-4 text-slate-400 group-hover:text-indigo-600 transition" />
+                        <span className="font-medium text-xs text-slate-800">{action.title}</span>
                       </div>
-                      <span className="text-[10px] font-mono text-slate-500 uppercase px-2 py-0.5 bg-slate-950/60 rounded border border-slate-800">
-                        {action.category}
-                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">{action.category}</span>
                     </button>
                   );
                 })}
@@ -171,27 +214,27 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </div>
           )}
 
-          {/* Matched Papers */}
+          {/* Question Papers */}
           {matchedPapers.length > 0 && (
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-wider text-purple-400 px-3 py-1 font-semibold">
-                Question Papers ({matchedPapers.length})
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 py-1 font-semibold">
+                Question Papers
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {matchedPapers.map((paper) => (
                   <button
                     key={paper.id}
                     onClick={() => handleSelect('papers')}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-800/80 text-left transition"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-indigo-50/50 transition cursor-pointer text-left"
                   >
-                    <div className="flex items-center gap-3">
-                      <FileText className="w-4 h-4 text-purple-400" />
+                    <div className="flex items-center gap-2.5">
+                      <FileCheck2 className="w-4 h-4 text-indigo-600" />
                       <div>
-                        <div className="font-mono font-bold text-slate-200">{paper.paperCode}</div>
-                        <div className="text-[11px] text-slate-400">{paper.subject} • Set {paper.set} • {paper.questionsCount} questions</div>
+                        <div className="font-bold text-xs text-slate-900">{paper.paperCode}</div>
+                        <div className="text-[10px] text-slate-500">{paper.subject} (Set {paper.set})</div>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-purple-950 text-purple-300 border border-purple-800/50">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-100 text-slate-700">
                       {paper.status}
                     </span>
                   </button>
@@ -200,27 +243,56 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </div>
           )}
 
-          {/* Matched Packages */}
+          {/* Question Bank Items */}
+          {matchedQuestions.length > 0 && (
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 py-1 font-semibold">
+                Question Bank Items
+              </div>
+              <div className="space-y-0.5">
+                {matchedQuestions.map((qn) => (
+                  <button
+                    key={qn.id}
+                    onClick={() => handleSelect('questions')}
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-purple-50/50 transition cursor-pointer text-left"
+                  >
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <BookOpen className="w-4 h-4 text-purple-600 shrink-0" />
+                      <div className="truncate">
+                        <div className="font-bold text-xs text-slate-900">{qn.id} — {qn.subject}</div>
+                        <div className="text-[10px] text-slate-500 truncate">{qn.text}</div>
+                      </div>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-50 text-purple-700 shrink-0">
+                      {qn.difficulty}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Smart Packages */}
           {matchedPackages.length > 0 && (
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 px-3 py-1 font-semibold">
-                Smart Packages & Logistics ({matchedPackages.length})
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 py-1 font-semibold">
+                Smart Exam Containers
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {matchedPackages.map((pkg) => (
                   <button
                     key={pkg.id}
                     onClick={() => handleSelect('packages')}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-800/80 text-left transition"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-50 transition cursor-pointer text-left"
                   >
-                    <div className="flex items-center gap-3">
-                      <Boxes className="w-4 h-4 text-emerald-400" />
+                    <div className="flex items-center gap-2.5">
+                      <Boxes className="w-4 h-4 text-teal-600" />
                       <div>
-                        <div className="font-mono font-bold text-slate-200">{pkg.packageCode}</div>
-                        <div className="text-[11px] text-slate-400">Destination: {pkg.destinationCentreName}</div>
+                        <div className="font-bold text-xs text-slate-900">{pkg.packageCode}</div>
+                        <div className="text-[10px] text-slate-500">{pkg.destinationCentreName}</div>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-800/50">
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-700">
                       {pkg.status}
                     </span>
                   </button>
@@ -229,28 +301,28 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </div>
           )}
 
-          {/* Matched Incidents */}
+          {/* Incidents */}
           {matchedIncidents.length > 0 && (
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-wider text-rose-400 px-3 py-1 font-semibold">
-                Security Incidents ({matchedIncidents.length})
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 py-1 font-semibold">
+                Investigation Room
               </div>
-              <div className="space-y-1">
-                {matchedIncidents.map((inc) => (
+              <div className="space-y-0.5">
+                {matchedIncidents.map((i) => (
                   <button
-                    key={inc.id}
+                    key={i.id}
                     onClick={() => handleSelect('incidents')}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-800/80 text-left transition"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-rose-50/50 transition cursor-pointer text-left"
                   >
-                    <div className="flex items-center gap-3">
-                      <ShieldAlert className="w-4 h-4 text-rose-400" />
+                    <div className="flex items-center gap-2.5">
+                      <ShieldAlert className="w-4 h-4 text-rose-600" />
                       <div>
-                        <div className="font-medium text-slate-200">{inc.title}</div>
-                        <div className="text-[11px] text-slate-400">{inc.incidentCode} • Investigator: {inc.assignedInvestigator}</div>
+                        <div className="font-bold text-xs text-slate-900">{i.title}</div>
+                        <div className="text-[10px] text-slate-500 font-mono">{i.incidentCode}</div>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-800/50">
-                      {inc.severity}
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800">
+                      {i.severity}
                     </span>
                   </button>
                 ))}
@@ -258,56 +330,32 @@ export const CommandPalette: React.FC<CommandPaletteProps> = ({
             </div>
           )}
 
-          {/* Matched Exam Centres */}
+          {/* Exam Centres */}
           {matchedCentres.length > 0 && (
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-wider text-teal-400 px-3 py-1 font-semibold">
-                Examination Centres ({matchedCentres.length})
+              <div className="text-[10px] font-mono uppercase tracking-wider text-slate-400 px-3 py-1 font-semibold">
+                Exam Centres
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {matchedCentres.map((c) => (
                   <button
                     key={c.id}
                     onClick={() => handleSelect('centres')}
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-800/80 text-left transition"
+                    className="w-full flex items-center justify-between px-3 py-2 rounded-xl hover:bg-slate-50 transition cursor-pointer text-left"
                   >
-                    <div className="flex items-center gap-3">
-                      <MapPin className="w-4 h-4 text-teal-400" />
+                    <div className="flex items-center gap-2.5">
+                      <MapPin className="w-4 h-4 text-indigo-600" />
                       <div>
-                        <div className="font-medium text-slate-200">{c.name} ({c.code})</div>
-                        <div className="text-[11px] text-slate-400">{c.city} • Capacity: {c.capacity}</div>
+                        <div className="font-bold text-xs text-slate-900">{c.name}</div>
+                        <div className="text-[10px] text-slate-500">{c.city}, {c.state}</div>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono text-teal-300">
-                      Score: {c.securityScore}/100
-                    </span>
+                    <span className="text-[10px] font-mono text-slate-400">{c.code}</span>
                   </button>
                 ))}
               </div>
             </div>
           )}
-
-          {/* Empty State */}
-          {quickActions.length === 0 &&
-            matchedPapers.length === 0 &&
-            matchedPackages.length === 0 &&
-            matchedIncidents.length === 0 &&
-            matchedCentres.length === 0 && (
-              <div className="p-8 text-center text-slate-400 space-y-2">
-                <Search className="w-8 h-8 mx-auto text-slate-600" />
-                <p className="text-sm font-medium">No results found for &ldquo;{query}&rdquo;</p>
-                <p className="text-xs text-slate-500">Try searching for &apos;physics&apos;, &apos;tamper&apos;, &apos;handover&apos;, or &apos;block&apos;.</p>
-              </div>
-            )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-3 border-t border-slate-800/80 bg-slate-950/80 flex items-center justify-between text-[11px] text-slate-400">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-mono">Global Command Index Active</span>
-          </div>
-          <span className="font-mono">ExamShield Core v2.4</span>
         </div>
       </div>
     </div>

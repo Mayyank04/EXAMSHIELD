@@ -44,7 +44,6 @@ import {
 } from './views/OtherViews.tsx';
 import { PackagesView } from './views/PackagesView.tsx';
 import { PapersView } from './views/PapersView.tsx';
-import { SecurityVault3DView } from './views/SecurityVault3DView.tsx';
 import { SimulatorView } from './views/SimulatorView.tsx';
 import { SystemHealthView } from './views/SystemHealthView.tsx';
 import { TransportView } from './views/TransportView.tsx';
@@ -195,7 +194,7 @@ export default function App() {
     return (
       <WelcomeView
         onEnterApp={() => setCurrentView('dashboard')}
-        onExploreArchitecture={() => setCurrentView('vault3d')}
+        onExploreArchitecture={() => setCurrentView('papers')}
       />
     );
   }
@@ -321,7 +320,11 @@ export default function App() {
               )}
 
               {currentView === 'leak' && (
-                <LeakAnalysisView questions={questions} onRefresh={handleRefresh} />
+                <LeakAnalysisView
+                  questions={questions}
+                  papers={papers}
+                  onRefresh={handleRefresh}
+                />
               )}
 
               {currentView === 'alerts' && (
@@ -346,6 +349,7 @@ export default function App() {
                   custodyEvents={custodyEvents}
                   papers={papers}
                   onRefresh={handleRefresh}
+                  onNavigateToHandover={() => setCurrentView('handover')}
                 />
               )}
 
@@ -363,10 +367,6 @@ export default function App() {
                 />
               )}
 
-              {currentView === 'vault3d' && (
-                <SecurityVault3DView onNavigateToView={setCurrentView} />
-              )}
-
               {currentView === 'centres' && (
                 <CentresView centres={centres} onRefresh={handleRefresh} />
               )}
@@ -380,7 +380,7 @@ export default function App() {
               )}
 
               {currentView === 'questions' && (
-                <QuestionBankView questions={questions} />
+                <QuestionBankView questions={questions} onRefresh={handleRefresh} />
               )}
 
               {currentView === 'audit' && (
@@ -405,6 +405,7 @@ export default function App() {
         incidents={incidents}
         centres={centres}
         users={availableUsers}
+        questions={questions}
       />
 
       <NotificationCenter

@@ -12,6 +12,8 @@ import {
   ShieldCheck,
   UserCheck,
   Users,
+  X,
+  XCircle,
   Zap,
 } from 'lucide-react';
 import { Card, CardContent } from '../components/ui/card.tsx';
@@ -33,21 +35,23 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
   onRefresh,
 }) => {
   const [selectedPkgId, setSelectedPkgId] = useState(packages[0]?.id || 'ES-PKG-82931');
-  const [senderId, setSenderId] = useState('USR-004'); // Transport Officer
-  const [receiverId, setReceiverId] = useState('USR-006'); // Centre Superintendent
+  const [senderId, setSenderId] = useState('USR-004'); // Transport Officer (Rajinder Singh Gill)
+  const [receiverId, setReceiverId] = useState('USR-006'); // Centre Superintendent (Harish Chandra)
   const [senderConfirmed, setSenderConfirmed] = useState(false);
   const [receiverConfirmed, setReceiverConfirmed] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [successReceipt, setSuccessReceipt] = useState<any | null>(null);
+  const [rejectionNotice, setRejectionNotice] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const selectedPkg = packages.find((p) => p.id === selectedPkgId) || packages[0];
-  const senderUser = users.find((u) => u.id === senderId) || users[3];
-  const receiverUser = users.find((u) => u.id === receiverId) || users[5];
+  const senderUser = users.find((u) => u.id === senderId) || users[3] || users[0];
+  const receiverUser = users.find((u) => u.id === receiverId) || users[5] || users[1];
 
   const handleExecuteHandover = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setRejectionNotice(null);
 
     if (!senderConfirmed || !receiverConfirmed) {
       setErrorMessage('Both the Dispatching Officer and Receiving Superintendent must explicitly verify and authorize the handover.');
@@ -55,7 +59,7 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
     }
 
     if (selectedPkg && selectedPkg.tamperState === 'BREACHED') {
-      setErrorMessage('Handover Blocked: Package is in TAMPER_LOCKED state. Forensic quarantine and Board authorization required before transfer.');
+      setErrorMessage('Handover Blocked: Container is in TAMPER_LOCKED state. Forensic quarantine and Board authorization required before transfer.');
       return;
     }
 
@@ -77,6 +81,14 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
     }
   };
 
+  const handleRejectHandover = async () => {
+    if (!confirm('Reject custody handover and flag this container for physical inspection?')) return;
+    setErrorMessage(null);
+    setSuccessReceipt(null);
+    setRejectionNotice(`Custody transfer rejected by ${receiverUser?.name || 'Superintendent'}. Non-conformance incident logged.`);
+    onRefresh();
+  };
+
   return (
     <div className="space-y-6 pb-12 animate-in fade-in duration-200">
       {/* Top Header */}
@@ -96,7 +108,7 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
 
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-50 border border-slate-200 text-xs font-semibold text-slate-700">
           <Lock className="w-4 h-4 text-teal-600" />
-          <span>Shamir Secret Splitting Ready</span>
+          <span>Shamir Dual Signature Verification</span>
         </div>
       </div>
 
@@ -105,16 +117,26 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
         {/* Left: Handover Execution Console (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
           <Card className="p-5 border-slate-200 bg-white shadow-sm space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="text-sm font-bold text-slate-900 font-heading">
+                Handover Request Configuration
+              </h3>
+              <span className="text-[10px] font-semibold text-slate-500 uppercase">
+                Status: {selectedPkg?.status || 'Awaiting Confirmation'}
+              </span>
+            </div>
+
             <form onSubmit={handleExecuteHandover} className="space-y-4 text-xs">
               <div>
                 <label className="block text-slate-700 font-semibold mb-1">
-                  Target Smart Container
+                  Target Smart Exam Box Container
                 </label>
                 <select
                   value={selectedPkgId}
                   onChange={(e) => {
                     setSelectedPkgId(e.target.value);
                     setSuccessReceipt(null);
+                    setRejectionNotice(null);
                   }}
                   className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-xl text-slate-900 font-bold"
                 >
@@ -144,7 +166,7 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
                   >
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.name} ({u.role.split('_')[0]})
+                        {u.name} ({u.role})
                       </option>
                     ))}
                   </select>
@@ -178,7 +200,7 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
                   >
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>
-                        {u.name} ({u.role.split('_')[0]})
+                        {u.name} ({u.role})
                       </option>
                     ))}
                   </select>
@@ -203,16 +225,35 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
                 </div>
               )}
 
-              <LiquidButton
-                variant="default"
-                size="default"
-                type="submit"
-                disabled={isProcessing}
-                className="w-full"
-              >
-                <KeyRound className="w-4 h-4" />
-                <span>{isProcessing ? 'Verifying Cryptographic Consensus...' : 'Execute Two-Party Handover & Commit Block'}</span>
-              </LiquidButton>
+              {rejectionNotice && (
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs">
+                  {rejectionNotice}
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  size="default"
+                  type="button"
+                  onClick={handleRejectHandover}
+                  className="text-xs font-semibold text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
+                >
+                  <XCircle className="w-4 h-4" />
+                  <span>Reject Handover</span>
+                </Button>
+
+                <LiquidButton
+                  variant="default"
+                  size="default"
+                  type="submit"
+                  disabled={isProcessing}
+                  className="flex-1"
+                >
+                  <KeyRound className="w-4 h-4" />
+                  <span>{isProcessing ? 'Verifying Dual Signatures...' : 'Confirm Handover & Commit Block'}</span>
+                </LiquidButton>
+              </div>
             </form>
           </Card>
         </div>
@@ -234,11 +275,18 @@ export const HandoverView: React.FC<HandoverViewProps> = ({
                   </div>
                 </div>
                 <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                  SUCCESS
+                  VERIFIED
                 </span>
               </div>
 
               <div className="space-y-2">
+                <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                  <div className="text-[10px] text-slate-500 uppercase">Custody Transition Details:</div>
+                  <div className="text-slate-800">
+                    Transferred from <strong>{senderUser?.name}</strong> to <strong>{receiverUser?.name}</strong>.
+                  </div>
+                </div>
+
                 <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1 font-mono">
                   <div className="text-slate-500 font-sans text-[10px]">Committed Block Hash:</div>
                   <div className="text-indigo-700 font-bold break-all">

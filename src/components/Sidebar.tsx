@@ -58,7 +58,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       title: 'OVERVIEW',
       items: [
         { id: 'dashboard', label: 'Command Center', icon: Activity },
-        { id: 'welcome', label: 'Platform Landing', icon: Sparkles },
       ],
     },
     {
@@ -109,7 +108,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
       items: [
         { id: 'iot', label: 'IoT Sensor Fleet', icon: Smartphone },
         { id: 'centres', label: 'Exam Centres', icon: MapPin },
-        { id: 'vault3d', label: '3D Security Vault', icon: Globe },
       ],
     },
     {
