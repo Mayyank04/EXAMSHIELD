@@ -1,0 +1,6 @@
+{
+  "name": "ExamShield - AI-Powered Examination Paper Security & Integrity Platform",
+  "description": "End-to-end examination paper security command platform featuring cryptographic ledger, IoT tamper detection, AI insider threat & leak similarity analysis, and chain of custody tracking.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
